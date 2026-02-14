@@ -1,7 +1,7 @@
 const db = require('./database');
 const fs = require('fs');
 const path = require('path');
-const { queryOne, execute } = require('../utils/dbHelper');
+const { query, queryOne, execute } = require('../utils/dbHelper');
 
 // Helper to run DDL statements (CREATE TABLE, CREATE INDEX, etc.)
 const runDDL = (sql) => {
@@ -84,7 +84,7 @@ async function initDatabase() {
     console.log('\nDatabase schema initialized successfully');
     
     // Verify tables were created
-    const tablesCheck = await queryOne("SELECT name FROM sqlite_master WHERE type='table' ORDER BY name");
+    const tablesCheck = await query("SELECT name FROM sqlite_master WHERE type='table' ORDER BY name");
     console.log('Tables in database:', tablesCheck.rows.map(r => r.name).join(', ') || 'none');
     
     // Create default admin user (password: admin123)

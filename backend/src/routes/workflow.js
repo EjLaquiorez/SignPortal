@@ -18,4 +18,10 @@ router.post('/stage/:id/assign', workflowController.assignStage);
 // Update stage status
 router.put('/stage/:id/status', workflowController.updateStageStatus);
 
+// Add comment to stage
+router.post('/stage/:id/comments', workflowController.addStageComment);
+
+// Get comments for stage
+router.get('/stage/:id/comments', workflowController.getStageComments);
+
 module.exports = router;

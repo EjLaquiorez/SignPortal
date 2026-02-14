@@ -15,6 +15,10 @@ api.interceptors.request.use(
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
     }
+    // For FormData, let the browser set Content-Type with boundary
+    if (config.data instanceof FormData) {
+      delete config.headers['Content-Type'];
+    }
     return config;
   },
   (error) => {
@@ -44,17 +48,27 @@ export const authAPI = {
 
 // Documents API
 export const documentsAPI = {
-  upload: (file) => {
-    const formData = new FormData();
-    formData.append('file', file);
-    return api.post('/documents', formData, {
-      headers: { 'Content-Type': 'multipart/form-data' }
-    });
+  upload: (formData) => {
+    return api.post('/documents', formData);
   },
+  uploadAttachment: (documentId, formData) => {
+    return api.post(`/documents/${documentId}/attachments`, formData);
+  },
+  listAttachments: (documentId) => api.get(`/documents/${documentId}/attachments`),
+  downloadAttachment: (attachmentId) => api.get(`/attachments/${attachmentId}/download`, { responseType: 'blob' }),
+  deleteAttachment: (attachmentId) => api.delete(`/attachments/${attachmentId}`),
   list: (params) => api.get('/documents', { params }),
   get: (id) => api.get(`/documents/${id}`),
   download: (id) => api.get(`/documents/${id}/download`, { responseType: 'blob' }),
-  delete: (id) => api.delete(`/documents/${id}`)
+  delete: (id) => api.delete(`/documents/${id}`),
+  // Document versions API
+  uploadSignedVersion: (documentId, formData) => {
+    return api.post(`/documents/${documentId}/versions`, formData);
+  },
+  listVersions: (documentId) => api.get(`/documents/${documentId}/versions`),
+  getVersion: (documentId, versionId) => api.get(`/documents/${documentId}/versions/${versionId}`),
+  downloadVersion: (documentId, versionId) => api.get(`/documents/${documentId}/versions/${versionId}/download`, { responseType: 'blob' }),
+  getCurrentVersion: (documentId) => api.get(`/documents/${documentId}/versions/current`)
 };
 
 // Workflow API
@@ -62,7 +76,9 @@ export const workflowAPI = {
   getByDocument: (documentId) => api.get(`/workflow/document/${documentId}`),
   getPending: () => api.get('/workflow/pending'),
   assignStage: (stageId, userId) => api.post(`/workflow/stage/${stageId}/assign`, { userId }),
-  updateStageStatus: (stageId, status) => api.put(`/workflow/stage/${stageId}/status`, { status })
+  updateStageStatus: (stageId, data) => api.put(`/workflow/stage/${stageId}/status`, data),
+  addComment: (stageId, comment) => api.post(`/workflow/stage/${stageId}/comments`, { comment }),
+  getComments: (stageId) => api.get(`/workflow/stage/${stageId}/comments`)
 };
 
 // Signatures API
@@ -73,9 +89,7 @@ export const signaturesAPI = {
       const formData = new FormData();
       formData.append('file', data.file);
       formData.append('workflowStageId', data.workflowStageId);
-      return api.post('/signatures', formData, {
-        headers: { 'Content-Type': 'multipart/form-data' }
-      });
+      return api.post('/signatures', formData);
     } else {
       // Canvas signature - send as JSON with base64 data
       return api.post('/signatures', {
@@ -87,6 +101,15 @@ export const signaturesAPI = {
   getByStage: (stageId) => api.get(`/signatures/stage/${stageId}`),
   getImage: (signatureId) => api.get(`/signatures/${signatureId}/image`, { responseType: 'blob' }),
   getByDocument: (docId) => api.get(`/signatures/document/${docId}`)
+};
+
+// Notifications API
+export const notificationsAPI = {
+  list: (params) => api.get('/notifications', { params }),
+  getUnreadCount: () => api.get('/notifications/unread-count'),
+  markAsRead: (id) => api.put(`/notifications/${id}/read`),
+  markAllAsRead: () => api.put('/notifications/read-all'),
+  delete: (id) => api.delete(`/notifications/${id}`)
 };
 
 export default api;

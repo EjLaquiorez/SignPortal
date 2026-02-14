@@ -12,8 +12,8 @@ const authenticateToken = async (req, res, next) => {
 
     const decoded = jwt.verify(token, process.env.JWT_SECRET || 'your-secret-key-change-this-in-production');
     
-    // Get user from database
-    const result = await queryOne('SELECT id, email, role, name FROM users WHERE id = ?', [decoded.userId]);
+    // Get user from database with PNP fields
+    const result = await queryOne('SELECT id, email, role, name, rank, designation, unit, badge_number FROM users WHERE id = ?', [decoded.userId]);
     
     if (result.rows.length === 0) {
       return res.status(401).json({ error: 'Invalid token' });

@@ -4,9 +4,10 @@ import ProtectedRoute from './components/ProtectedRoute';
 import Layout from './components/Layout/Layout';
 import Login from './components/Auth/Login';
 import Register from './components/Auth/Register';
+import Home from './pages/Home';
 import Dashboard from './pages/Dashboard';
 import Documents from './pages/Documents';
-import DocumentViewer from './components/Documents/DocumentViewer';
+import DocumentDetail from './pages/DocumentDetail';
 import PendingApprovals from './pages/PendingApprovals';
 import Admin from './pages/Admin';
 
@@ -52,7 +53,7 @@ const AppRoutes = () => {
         element={
           <ProtectedRoute>
             <Layout>
-              <DocumentViewer />
+              <DocumentDetail />
             </Layout>
           </ProtectedRoute>
         }
@@ -77,7 +78,10 @@ const AppRoutes = () => {
           </ProtectedRoute>
         }
       />
-      <Route path="/" element={<Navigate to="/dashboard" replace />} />
+      <Route
+        path="/"
+        element={<Home />}
+      />
     </Routes>
   );
 };

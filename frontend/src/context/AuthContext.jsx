@@ -41,7 +41,9 @@ export const AuthProvider = ({ children }) => {
 
   const login = async (email, password) => {
     try {
-      const response = await authAPI.login({ email, password });
+      // Trim and normalize email
+      const normalizedEmail = email.trim().toLowerCase();
+      const response = await authAPI.login({ email: normalizedEmail, password });
       const { user, token } = response.data;
       
       localStorage.setItem('token', token);
@@ -50,9 +52,33 @@ export const AuthProvider = ({ children }) => {
       
       return { success: true };
     } catch (error) {
+      console.error('Login error details:', error);
+      
+      // More detailed error messages
+      if (error.code === 'ECONNREFUSED' || error.message?.includes('Network Error')) {
+        return {
+          success: false,
+          error: 'Cannot connect to server. Please make sure the backend server is running on http://localhost:5000'
+        };
+      }
+      
+      if (error.response?.data?.error) {
+        return {
+          success: false,
+          error: error.response.data.error
+        };
+      }
+      
+      if (error.response?.status === 401) {
+        return {
+          success: false,
+          error: 'Invalid email or password. Please check your credentials and try again.'
+        };
+      }
+      
       return {
         success: false,
-        error: error.response?.data?.error || 'Login failed'
+        error: error.message || 'Login failed. Please try again.'
       };
     }
   };
@@ -68,9 +94,13 @@ export const AuthProvider = ({ children }) => {
       
       return { success: true };
     } catch (error) {
+      console.error('Registration error:', error);
+      const errorMessage = error.response?.data?.error || 
+                          error.message || 
+                          'Registration failed. Please check your connection and try again.';
       return {
         success: false,
-        error: error.response?.data?.error || 'Registration failed'
+        error: errorMessage
       };
     }
   };

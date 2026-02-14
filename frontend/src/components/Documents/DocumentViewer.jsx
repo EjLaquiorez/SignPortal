@@ -30,18 +30,20 @@ const DocumentViewer = () => {
   const handleDownload = async () => {
     try {
       const response = await documentsAPI.download(id);
-      const blob = new Blob([response.data]);
+      const blob = new Blob([response.data], { 
+        type: document.file_type || 'application/octet-stream' 
+      });
       const url = window.URL.createObjectURL(blob);
-      const a = document.createElement('a');
+      const a = window.document.createElement('a');
       a.href = url;
       a.download = document.original_filename;
-      document.body.appendChild(a);
+      window.document.body.appendChild(a);
       a.click();
       window.URL.revokeObjectURL(url);
-      document.body.removeChild(a);
+      window.document.body.removeChild(a);
     } catch (err) {
-      alert('Failed to download document');
-      console.error(err);
+      alert('Failed to download document: ' + (err.response?.data?.error || err.message));
+      console.error('Download error:', err);
     }
   };
 

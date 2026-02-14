@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
+import NotificationCenter from '../Notifications/NotificationCenter';
 
 const Header = ({ onMenuClick }) => {
   const { user, logout } = useAuth();
@@ -54,6 +55,7 @@ const Header = ({ onMenuClick }) => {
               <span style={styles.userRole}>{user?.role}</span>
             </>
           )}
+          <NotificationCenter />
           <button 
             onClick={handleLogout} 
             style={{

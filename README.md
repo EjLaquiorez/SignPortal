@@ -76,6 +76,33 @@ A full-stack document signing portal with role-based authentication, multi-stage
    ```
    Frontend will run on `http://localhost:5173`
 
+## Stopping Servers
+
+To stop all running servers, you have several options:
+
+### Option 1: Using the root package.json (Recommended)
+From the project root directory:
+```bash
+npm run stop
+```
+
+### Option 2: Using PowerShell script
+```bash
+powershell -ExecutionPolicy Bypass -File ./stop-servers.ps1
+```
+
+### Option 3: Using Batch file (Windows)
+Double-click `stop-servers.bat` or run:
+```bash
+stop-servers.bat
+```
+
+### Option 4: Stop backend only
+From the `backend` directory:
+```bash
+npm run stop
+```
+
 ## Usage
 
 1. **Register/Login**: Create an account or login with existing credentials

@@ -27,20 +27,25 @@ const Register = () => {
     setError('');
     setLoading(true);
 
-    const result = await register(
-      formData.email,
-      formData.password,
-      formData.name,
-      formData.role
-    );
-    
-    if (result.success) {
-      navigate('/dashboard');
-    } else {
-      setError(result.error);
+    try {
+      const result = await register(
+        formData.email,
+        formData.password,
+        formData.name,
+        formData.role
+      );
+      
+      if (result.success) {
+        navigate('/dashboard');
+      } else {
+        setError(result.error || 'Failed to create account. Please try again.');
+      }
+    } catch (err) {
+      console.error('Registration error:', err);
+      setError('An unexpected error occurred. Please try again.');
+    } finally {
+      setLoading(false);
     }
-    
-    setLoading(false);
   };
 
   return (

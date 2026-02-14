@@ -1,0 +1,9 @@
+{
+  "name": "signingportal",
+  "version": "1.0.0",
+  "description": "SigningPortal - Document Signing Portal",
+  "scripts": {
+    "stop": "powershell -ExecutionPolicy Bypass -File ./stop-servers.ps1",
+    "stop:all": "powershell -ExecutionPolicy Bypass -File ./stop-servers.ps1"
+  }
+}

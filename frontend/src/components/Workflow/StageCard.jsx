@@ -1,37 +1,16 @@
 import { useState } from 'react';
 import { useAuth } from '../../context/AuthContext';
-import { workflowAPI } from '../../services/api';
-import SignaturePad from '../Signature/SignaturePad';
-import SignatureDisplay from '../Signature/SignatureDisplay';
+import UploadSignedVersion from './UploadSignedVersion';
 
 const StageCard = ({ stage, onUpdate }) => {
   const { user } = useAuth();
-  const [showSignaturePad, setShowSignaturePad] = useState(false);
-  const [signatures, setSignatures] = useState(stage.signatures || []);
+  const [showUploadSignedVersion, setShowUploadSignedVersion] = useState(false);
 
-  const canSign = 
+  const canUpload = 
     (stage.assigned_to === user?.id || !stage.assigned_to) &&
     stage.required_role === user?.role &&
-    stage.status !== 'completed';
-
-  const handleSign = () => {
-    setShowSignaturePad(true);
-  };
-
-  const handleSignatureSuccess = async () => {
-    setShowSignaturePad(false);
-    // Refresh signatures
-    try {
-      const response = await workflowAPI.getByDocument(stage.document_id);
-      const updatedStage = response.data.workflow.find(s => s.id === stage.id);
-      setSignatures(updatedStage?.signatures || []);
-      if (onUpdate) {
-        onUpdate();
-      }
-    } catch (err) {
-      console.error('Failed to refresh signatures:', err);
-    }
-  };
+    stage.status !== 'completed' &&
+    stage.status !== 'rejected';
 
   const getStatusColor = (status) => {
     const colors = {
@@ -76,37 +55,46 @@ const StageCard = ({ stage, onUpdate }) => {
         )}
       </div>
 
-      {signatures.length > 0 && (
-        <div style={styles.signatures}>
-          <div style={styles.signaturesHeader}>Signatures</div>
-          <div style={styles.signatureList}>
-            {signatures.map((sig) => (
-              <div key={sig.id} style={styles.signatureItem}>
-                <SignatureDisplay signatureId={sig.id} />
-                <div style={styles.signatureInfo}>
-                  <div style={styles.signatureName}>{sig.user_name}</div>
-                  <div style={styles.signatureDate}>
-                    {new Date(sig.signed_at).toLocaleString()}
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
+      {stage.requires_signed_upload === 1 && (
+        <div style={styles.versionRequirement}>
+          {stage.signed_version_uploaded === 1 ? (
+            <div style={styles.uploadedIndicator}>
+              ✓ Signed version uploaded - Ready for approval
+            </div>
+          ) : (
+            <div style={styles.requiredIndicator}>
+              ⚠ Physical signature required - Download document, get it signed, then upload signed version
+            </div>
+          )}
         </div>
       )}
 
-      {canSign && !showSignaturePad && (
-        <button onClick={handleSign} style={styles.signButton}>
-          Sign This Stage
-        </button>
+      {canUpload && !showUploadSignedVersion && (
+        <div style={styles.actions}>
+          {stage.signed_version_uploaded !== 1 && (
+            <button 
+              onClick={() => setShowUploadSignedVersion(true)} 
+              style={styles.uploadButton}
+            >
+              Update Signed Version
+            </button>
+          )}
+        </div>
       )}
 
-      {showSignaturePad && (
-        <div style={styles.signaturePadContainer}>
-          <SignaturePad
+      {showUploadSignedVersion && (
+        <div style={styles.uploadContainer}>
+          <UploadSignedVersion
+            documentId={stage.document_id}
             workflowStageId={stage.id}
-            onSuccess={handleSignatureSuccess}
-            onCancel={() => setShowSignaturePad(false)}
+            stageName={stage.stage_name}
+            onUploadSuccess={() => {
+              setShowUploadSignedVersion(false);
+              if (onUpdate) {
+                onUpdate();
+              }
+            }}
+            onCancel={() => setShowUploadSignedVersion(false)}
           />
         </div>
       )}
@@ -223,6 +211,48 @@ const styles = {
     backgroundColor: '#f8fafc',
     borderRadius: '8px',
     border: '1px solid #e2e8f0'
+  },
+  versionRequirement: {
+    marginTop: '1rem',
+    padding: '0.75rem',
+    borderRadius: '6px',
+    fontSize: '0.875rem',
+    fontWeight: '500'
+  },
+  uploadedIndicator: {
+    color: '#16a34a',
+    backgroundColor: '#f0fdf4',
+    padding: '0.5rem 0.75rem',
+    borderRadius: '6px',
+    border: '1px solid #bbf7d0'
+  },
+  requiredIndicator: {
+    color: '#ea580c',
+    backgroundColor: '#fff7ed',
+    padding: '0.5rem 0.75rem',
+    borderRadius: '6px',
+    border: '1px solid #fed7aa'
+  },
+  actions: {
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '0.5rem',
+    marginTop: '1rem'
+  },
+  uploadButton: {
+    padding: '0.75rem 1.5rem',
+    backgroundColor: '#10b981',
+    color: 'white',
+    border: 'none',
+    borderRadius: '6px',
+    cursor: 'pointer',
+    width: '100%',
+    fontSize: '0.875rem',
+    fontWeight: '500',
+    transition: 'background-color 0.2s ease'
+  },
+  uploadContainer: {
+    marginTop: '1rem'
   }
 };
 

@@ -79,8 +79,11 @@ const login = async (req, res) => {
       return res.status(400).json({ error: 'Email and password are required' });
     }
 
-    // Get user from database
-    const result = await queryOne('SELECT * FROM users WHERE email = ?', [email]);
+    // Normalize email to lowercase for case-insensitive comparison
+    const normalizedEmail = email.trim().toLowerCase();
+
+    // Get user from database (case-insensitive email search)
+    const result = await queryOne('SELECT * FROM users WHERE LOWER(email) = ?', [normalizedEmail]);
     
     if (result.rows.length === 0) {
       return res.status(401).json({ error: 'Invalid email or password' });
@@ -113,7 +116,11 @@ const login = async (req, res) => {
     });
   } catch (error) {
     console.error('Login error:', error);
-    res.status(500).json({ error: 'Internal server error' });
+    console.error('Error stack:', error.stack);
+    res.status(500).json({ 
+      error: 'Internal server error',
+      message: process.env.NODE_ENV === 'development' ? error.message : undefined
+    });
   }
 };
 
