@@ -2,6 +2,7 @@ const { query, queryOne, execute } = require('../utils/dbHelper');
 const { detectFileType } = require('../utils/fileHandler');
 const { createDefaultWorkflow } = require('./workflowController');
 const { generateTrackingNumber } = require('../utils/trackingNumber');
+const { checkDocumentAccess, buildAccessFilter } = require('../utils/documentAccess');
 
 const uploadDocument = async (req, res) => {
   try {
@@ -175,19 +176,16 @@ const listDocuments = async (req, res) => {
     });
     selectColumns.push('u.name as uploaded_by_name', 'u.email as uploaded_by_email');
     
+    // Build access filter based on user role and assignments
+    const accessFilter = await buildAccessFilter(userId, userRole);
+    
     let sql = `
       SELECT ${selectColumns.join(', ')}
       FROM documents d
       LEFT JOIN users u ON d.uploaded_by = u.id
-      WHERE 1=1
+      WHERE 1=1 ${accessFilter.sql}
     `;
-    const params = [];
-
-    // Filter by role - personnel can only see their own, authority/admin can see all
-    if (userRole === 'personnel') {
-      sql += ` AND d.uploaded_by = ?`;
-      params.push(userId);
-    }
+    const params = [...accessFilter.params];
 
     // Filter by status
     if (status) {
@@ -318,9 +316,12 @@ const getDocument = async (req, res) => {
 
     const document = result.rows[0];
 
-    // Check permissions - personnel can only see their own
-    if (userRole === 'personnel' && document.uploaded_by !== userId) {
-      return res.status(403).json({ error: 'Access denied' });
+    // Check document access using strict access control
+    const accessCheck = await checkDocumentAccess(userId, userRole, parseInt(id));
+    if (!accessCheck.hasAccess) {
+      return res.status(403).json({ 
+        error: 'Access denied: You do not have permission to view this document' 
+      });
     }
 
     res.json({
@@ -356,9 +357,12 @@ const downloadDocument = async (req, res) => {
 
     const document = result.rows[0];
 
-    // Check permissions
-    if (userRole === 'personnel' && document.uploaded_by_id !== userId) {
-      return res.status(403).json({ error: 'Access denied' });
+    // Check document access using strict access control
+    const accessCheck = await checkDocumentAccess(userId, userRole, parseInt(id));
+    if (!accessCheck.hasAccess) {
+      return res.status(403).json({ 
+        error: 'Access denied: You do not have permission to download this document' 
+      });
     }
 
     // Set headers for file download

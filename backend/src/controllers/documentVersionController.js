@@ -31,17 +31,12 @@ const uploadSignedVersion = async (req, res) => {
 
     const document = docResult.rows[0];
 
-    // Check permissions - personnel can only upload for their own documents or assigned stages
-    if (userRole === 'personnel' && document.uploaded_by !== userId) {
-      // Check if user is assigned to the workflow stage
-      const stageResult = await queryOne(
-        'SELECT assigned_to FROM workflow_stages WHERE id = ? AND document_id = ?',
-        [workflow_stage_id, id]
-      );
-      
-      if (stageResult.rows.length === 0 || stageResult.rows[0].assigned_to !== userId) {
-        return res.status(403).json({ error: 'Access denied' });
-      }
+    // Check document access using strict access control
+    const accessCheck = await checkDocumentAccess(userId, userRole, parseInt(id));
+    if (!accessCheck.hasAccess) {
+      return res.status(403).json({ 
+        error: 'Access denied: You do not have permission to upload versions for this document' 
+      });
     }
 
     // Verify workflow stage exists and is valid
@@ -248,15 +243,18 @@ const getVersion = async (req, res) => {
     const userRole = req.user.role;
 
     // Verify document exists and user has access
-    const docResult = await queryOne('SELECT uploaded_by FROM documents WHERE id = ?', [id]);
+    const docResult = await queryOne('SELECT id FROM documents WHERE id = ?', [id]);
 
     if (docResult.rows.length === 0) {
       return res.status(404).json({ error: 'Document not found' });
     }
 
-    // Check permissions
-    if (userRole === 'personnel' && docResult.rows[0].uploaded_by !== userId) {
-      return res.status(403).json({ error: 'Access denied' });
+    // Check document access using strict access control
+    const accessCheck = await checkDocumentAccess(userId, userRole, parseInt(id));
+    if (!accessCheck.hasAccess) {
+      return res.status(403).json({ 
+        error: 'Access denied: You do not have permission to view this document version' 
+      });
     }
 
     const result = await queryOne(
@@ -295,15 +293,18 @@ const downloadVersion = async (req, res) => {
     const userRole = req.user.role;
 
     // Verify document exists and user has access
-    const docResult = await queryOne('SELECT uploaded_by FROM documents WHERE id = ?', [id]);
+    const docResult = await queryOne('SELECT id FROM documents WHERE id = ?', [id]);
 
     if (docResult.rows.length === 0) {
       return res.status(404).json({ error: 'Document not found' });
     }
 
-    // Check permissions
-    if (userRole === 'personnel' && docResult.rows[0].uploaded_by !== userId) {
-      return res.status(403).json({ error: 'Access denied' });
+    // Check document access using strict access control
+    const accessCheck = await checkDocumentAccess(userId, userRole, parseInt(id));
+    if (!accessCheck.hasAccess) {
+      return res.status(403).json({ 
+        error: 'Access denied: You do not have permission to download this document version' 
+      });
     }
 
     const result = await queryOne(
@@ -338,15 +339,18 @@ const getCurrentVersion = async (req, res) => {
     const userRole = req.user.role;
 
     // Verify document exists and user has access
-    const docResult = await queryOne('SELECT uploaded_by, current_version_number FROM documents WHERE id = ?', [id]);
+    const docResult = await queryOne('SELECT id, current_version_number FROM documents WHERE id = ?', [id]);
 
     if (docResult.rows.length === 0) {
       return res.status(404).json({ error: 'Document not found' });
     }
 
-    // Check permissions
-    if (userRole === 'personnel' && docResult.rows[0].uploaded_by !== userId) {
-      return res.status(403).json({ error: 'Access denied' });
+    // Check document access using strict access control
+    const accessCheck = await checkDocumentAccess(userId, userRole, parseInt(id));
+    if (!accessCheck.hasAccess) {
+      return res.status(403).json({ 
+        error: 'Access denied: You do not have permission to view the current version of this document' 
+      });
     }
 
     const currentVersionNumber = docResult.rows[0].current_version_number || 1;

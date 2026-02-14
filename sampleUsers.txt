@@ -1,0 +1,353 @@
+================================================================================
+                    SAMPLE USER LIST FOR DOCUMENT APPROVAL WORKFLOW
+                    Philippine National Police (PNP) SignPortal System
+================================================================================
+
+SYSTEM ADMINISTRATOR
+================================================================================
+Email:              admin@pnp.gov.ph
+Password:           admin123
+Role:               admin
+Name:               System Administrator
+Rank:               N/A
+Designation:        System Administrator
+Unit:               IT Division
+Badge Number:       ADMIN-001
+Description:        Full system access for administration and configuration
+
+
+================================================================================
+PERSONNEL (Document Uploaders)
+================================================================================
+
+1. PO1 Juan Dela Cruz
+   Email:              personnel1@pnp.gov.ph
+   Password:           personnel123
+   Role:               personnel
+   Rank:               Police Officer 1
+   Designation:        Investigation Officer
+   Unit:               Investigation and Detective Management
+   Badge Number:       PNP-2024-001
+   Description:        Entry-level personnel who uploads documents for approval
+
+2. PO2 Maria Santos
+   Email:              personnel2@pnp.gov.ph
+   Password:           personnel123
+   Role:               personnel
+   Rank:               Police Officer 2
+   Designation:        Intelligence Analyst
+   Unit:               Intelligence Division
+   Badge Number:       PNP-2024-002
+   Description:        Personnel who creates intelligence reports
+
+3. PO2 Carlos Reyes
+   Email:              personnel3@pnp.gov.ph
+   Password:           personnel123
+   Role:               personnel
+   Rank:               Police Officer 2
+   Designation:        Administrative Staff
+   Unit:               Human Resource and Doctrine
+   Badge Number:       PNP-2024-003
+   Description:        Personnel handling administrative requests
+
+4. PO1 Ana Garcia
+   Email:              personnel4@pnp.gov.ph
+   Password:           personnel123
+   Role:               personnel
+   Rank:               Police Officer 1
+   Designation:        Finance Clerk
+   Unit:               Finance Division
+   Badge Number:       PNP-2024-004
+   Description:        Personnel handling financial documents
+
+
+================================================================================
+FIRST-LEVEL SUPERVISORS (Section Chiefs)
+================================================================================
+
+5. PSMS Pedro Martinez
+   Email:              supervisor1@pnp.gov.ph
+   Password:           supervisor123
+   Role:               authority
+   Rank:               Police Senior Master Sergeant
+   Designation:        Investigation Section Chief
+   Unit:               Investigation and Detective Management
+   Badge Number:       PNP-2020-101
+   Description:        First-level supervisor for investigation reports
+
+6. PMSg Elena Rodriguez
+   Email:              supervisor2@pnp.gov.ph
+   Password:           supervisor123
+   Role:               authority
+   Rank:               Police Master Sergeant
+   Designation:        Intelligence Section Chief
+   Unit:               Intelligence Division
+   Badge Number:       PNP-2021-102
+   Description:        First-level supervisor for intelligence reports
+
+7. PSSg Roberto Tan
+   Email:              supervisor3@pnp.gov.ph
+   Password:           supervisor123
+   Role:               authority
+   Rank:               Police Senior Staff Sergeant
+   Designation:        HR Section Chief
+   Unit:               Human Resource and Doctrine
+   Badge Number:       PNP-2022-103
+   Description:        First-level supervisor for administrative requests
+
+8. PSSg Lourdes Villanueva
+   Email:              supervisor4@pnp.gov.ph
+   Password:           supervisor123
+   Role:               authority
+   Rank:               Police Senior Staff Sergeant
+   Designation:        Finance Section Chief
+   Unit:               Finance Division
+   Badge Number:       PNP-2022-104
+   Description:        First-level supervisor for financial documents
+
+
+================================================================================
+UNIT COMMANDERS (Division Heads)
+================================================================================
+
+9. PLTCOL Antonio Cruz
+   Email:              unitcommander1@pnp.gov.ph
+   Password:           commander123
+   Role:               authority
+   Rank:               Police Lieutenant Colonel
+   Designation:        Unit Commander - IDM
+   Unit:               Investigation and Detective Management
+   Badge Number:       PNP-2015-201
+   Description:        Unit Commander with authority to approve investigation documents
+
+10. PLTCOL Isabel Morales
+    Email:              unitcommander2@pnp.gov.ph
+    Password:           commander123
+    Role:               authority
+    Rank:               Police Lieutenant Colonel
+    Designation:        Unit Commander - Intelligence
+    Unit:               Intelligence Division
+    Badge Number:       PNP-2016-202
+    Description:        Unit Commander with authority to approve intelligence documents
+
+11. PLTCOL Ferdinand Aquino
+    Email:              unitcommander3@pnp.gov.ph
+    Password:           commander123
+    Role:               authority
+    Rank:               Police Lieutenant Colonel
+    Designation:        Unit Commander - HRD
+    Unit:               Human Resource and Doctrine
+    Badge Number:       PNP-2017-203
+    Description:        Unit Commander with authority to approve administrative documents
+
+12. PLTCOL Rosario Bautista
+    Email:              unitcommander4@pnp.gov.ph
+    Password:           commander123
+    Role:               authority
+    Rank:               Police Lieutenant Colonel
+    Designation:        Unit Commander - Finance
+    Unit:               Finance Division
+    Badge Number:       PNP-2017-204
+    Description:        Unit Commander with authority to approve financial documents
+
+
+================================================================================
+PROVINCIAL LEVEL AUTHORITIES
+================================================================================
+
+13. PCOL Ricardo Dela Rosa
+    Email:              provincialdirector@pnp.gov.ph
+    Password:           director123
+    Role:               authority
+    Rank:               Police Colonel
+    Designation:        Provincial Director
+    Unit:               Provincial Office
+    Badge Number:       PNP-2010-301
+    Description:        Provincial Director with authority for final approval on most documents
+
+14. PCOL Maricel Fernandez
+    Email:              deputydirector@pnp.gov.ph
+    Password:           director123
+    Role:               authority
+    Rank:               Police Colonel
+    Designation:        Deputy Provincial Director
+    Unit:               Provincial Office
+    Badge Number:       PNP-2011-302
+    Description:        Deputy Director with authority to approve in absence of Provincial Director
+
+
+================================================================================
+REGIONAL LEVEL AUTHORITIES
+================================================================================
+
+15. PBGEN Alfredo Lim
+    Email:              regionaldirector@pnp.gov.ph
+    Password:           director123
+    Role:               authority
+    Rank:               Police Brigadier General
+    Designation:        Regional Director
+    Unit:               Regional Office
+    Badge Number:       PNP-2005-401
+    Description:        Regional Director with highest authority for final approval on critical documents
+
+16. PBGEN Corazon Santiago
+    Email:              deputyregional@pnp.gov.ph
+    Password:           director123
+    Role:               authority
+    Rank:               Police Brigadier General
+    Designation:        Deputy Regional Director
+    Unit:               Regional Office
+    Badge Number:       PNP-2006-402
+    Description:        Deputy Regional Director with authority for high-level approvals
+
+
+================================================================================
+DIVISION CHIEFS
+================================================================================
+
+17. PMAJ Roberto Santos
+    Email:              logisticschief@pnp.gov.ph
+    Password:           chief123
+    Role:               authority
+    Rank:               Police Major
+    Designation:        Logistics Division Chief
+    Unit:               Logistics
+    Badge Number:       PNP-2018-205
+    Description:        Division Chief for procurement and logistics documents
+
+18. PMAJ Atty. Maria Concepcion
+    Email:              legalchief@pnp.gov.ph
+    Password:           chief123
+    Role:               authority
+    Rank:               Police Major
+    Designation:        Legal Division Chief
+    Unit:               Legal Division
+    Badge Number:       PNP-2019-206
+    Description:        Division Chief for legal documents and compliance
+
+19. PMAJ Eduardo Ramirez
+    Email:              operationschief@pnp.gov.ph
+    Password:           chief123
+    Role:               authority
+    Rank:               Police Major
+    Designation:        Operations Division Chief
+    Unit:               Operations
+    Badge Number:       PNP-2018-207
+    Description:        Division Chief for operational documents
+
+
+================================================================================
+LOCAL STATION COMMANDERS
+================================================================================
+
+20. PLTCOL Jose Mendoza
+    Email:              citychief@pnp.gov.ph
+    Password:           chief123
+    Role:               authority
+    Rank:               Police Lieutenant Colonel
+    Designation:        City Chief of Police
+    Unit:               City Police Station
+    Badge Number:       PNP-2016-208
+    Description:        City-level authority for local document approvals
+
+21. PMAJ Teresa Lopez
+    Email:              municipalchief@pnp.gov.ph
+    Password:           chief123
+    Role:               authority
+    Rank:               Police Major
+    Designation:        Municipal Chief of Police
+    Unit:               Municipal Police Station
+    Badge Number:       PNP-2019-209
+    Description:        Municipal-level authority for local document approvals
+
+
+================================================================================
+PASSWORD SUMMARY
+================================================================================
+
+Admin:               admin123
+Personnel:           personnel123
+Supervisors:         supervisor123
+Unit Commanders:     commander123
+Directors:           director123
+Division Chiefs:     chief123
+
+⚠️  SECURITY NOTE: These are sample/test passwords. In production, enforce 
+    strong password policies.
+
+
+================================================================================
+WORKFLOW EXAMPLES
+================================================================================
+
+Example 1: Investigation Report Flow
+-------------------------------------
+1. PO1 Juan Dela Cruz (personnel) uploads investigation report
+2. PSMS Pedro Martinez (supervisor) reviews and signs → Uploads signed version
+3. PLTCOL Antonio Cruz (Unit Commander) reviews and signs → Uploads signed version
+4. PCOL Ricardo Dela Rosa (Provincial Director) reviews and signs → Uploads signed version
+5. PBGEN Alfredo Lim (Regional Director) final approval → Uploads signed version
+6. Document marked as Completed
+
+Example 2: Administrative Request Flow
+--------------------------------------
+1. PO2 Carlos Reyes (personnel) uploads administrative request
+2. PSSg Roberto Tan (HR Section Chief) reviews and signs → Uploads signed version
+3. PLTCOL Ferdinand Aquino (Unit Commander - HRD) reviews and signs → Uploads signed version
+4. Document marked as Completed
+
+Example 3: Financial Request Flow
+----------------------------------
+1. PO1 Ana Garcia (personnel) uploads financial request
+2. PSSg Lourdes Villanueva (Finance Section Chief) reviews and signs → Uploads signed version
+3. PLTCOL Rosario Bautista (Unit Commander - Finance) reviews and signs → Uploads signed version
+4. PCOL Ricardo Dela Rosa (Provincial Director) final approval → Uploads signed version
+5. Document marked as Completed
+
+
+================================================================================
+APPROVAL CHAIN VISUALIZATION
+================================================================================
+
+Personnel (Upload)
+    ↓
+Section Chief (First Review)
+    ↓
+Unit Commander (Unit Approval)
+    ↓
+Provincial Director (Provincial Approval)
+    ↓
+Regional Director (Final Approval)
+    ↓
+Completed
+
+
+================================================================================
+TOTAL USERS: 22
+================================================================================
+- 1 System Administrator
+- 4 Personnel (Document Uploaders)
+- 4 First-Level Supervisors (Section Chiefs)
+- 4 Unit Commanders
+- 2 Provincial Directors
+- 2 Regional Directors
+- 3 Division Chiefs
+- 2 Local Station Commanders
+
+
+================================================================================
+USAGE INSTRUCTIONS
+================================================================================
+
+To seed these users into the database, run:
+
+    cd backend
+    npm run seed-users
+
+This will create all sample users with hashed passwords. Users that already 
+exist will be skipped.
+
+
+================================================================================
+END OF USER LIST
+================================================================================

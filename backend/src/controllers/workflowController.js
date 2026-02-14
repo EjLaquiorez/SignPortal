@@ -2,6 +2,7 @@ const { query, queryOne, execute } = require('../utils/dbHelper');
 const { getWorkflowTemplate } = require('../config/workflowTemplates');
 const { getApprovalChain } = require('../config/unitHierarchy');
 const { createNotification } = require('./notificationController');
+const { checkDocumentAccess } = require('../utils/documentAccess');
 
 // Create workflow stages for a document based on purpose
 const createDefaultWorkflow = async (documentId, purpose = null, officeUnit = null) => {
@@ -89,15 +90,18 @@ const getWorkflowByDocument = async (req, res) => {
     const userRole = req.user.role;
 
     // Verify document exists and user has access
-    const docResult = await queryOne('SELECT uploaded_by FROM documents WHERE id = ?', [id]);
+    const docResult = await queryOne('SELECT id FROM documents WHERE id = ?', [id]);
 
     if (docResult.rows.length === 0) {
       return res.status(404).json({ error: 'Document not found' });
     }
 
-    // Check permissions
-    if (userRole === 'personnel' && docResult.rows[0].uploaded_by !== userId) {
-      return res.status(403).json({ error: 'Access denied' });
+    // Check document access using strict access control
+    const accessCheck = await checkDocumentAccess(userId, userRole, parseInt(id));
+    if (!accessCheck.hasAccess) {
+      return res.status(403).json({ 
+        error: 'Access denied: You do not have permission to view this document workflow' 
+      });
     }
 
     // Get workflow stages
