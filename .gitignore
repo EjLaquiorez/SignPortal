@@ -27,3 +27,6 @@ Thumbs.db
 # Database
 *.db
 *.sqlite
+
+# Documentation
+presentation-guidelines/
