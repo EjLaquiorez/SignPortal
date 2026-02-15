@@ -82,12 +82,12 @@ const uploadDocument = async (req, res) => {
 
     const documentId = result.lastInsertRowid;
 
-    // Get the created document with all fields
+    // Get the created document with all fields including tracking_number
     const docResult = await queryOne(
       `SELECT id, filename, original_filename, file_type, file_size, 
               uploaded_by, status, document_title, purpose, office_unit,
               case_reference_number, classification_level, priority, deadline,
-              notes, is_urgent, created_at, updated_at
+              notes, is_urgent, tracking_number, current_stage_name, created_at, updated_at
        FROM documents WHERE id = ?`,
       [documentId]
     );
@@ -122,6 +122,8 @@ const uploadDocument = async (req, res) => {
         deadline: document.deadline,
         notes: document.notes,
         is_urgent: document.is_urgent === 1,
+        tracking_number: document.tracking_number,
+        current_stage_name: document.current_stage_name,
         created_at: document.created_at,
         updated_at: document.updated_at
       }
@@ -301,6 +303,7 @@ const getDocument = async (req, res) => {
               d.status, d.created_at, d.updated_at,
               d.document_title, d.purpose, d.office_unit, d.case_reference_number,
               d.classification_level, d.priority, d.deadline, d.notes, d.is_urgent,
+              d.tracking_number, d.current_stage_name,
               u.name as uploaded_by_name, u.email as uploaded_by_email,
               u.rank as uploaded_by_rank, u.designation as uploaded_by_designation,
               d.uploaded_by

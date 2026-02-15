@@ -1,5 +1,6 @@
 const { query, queryOne, execute } = require('../utils/dbHelper');
 const { createNotification } = require('./notificationController');
+const { checkDocumentAccess } = require('../utils/documentAccess');
 
 // Upload a new signed version of a document for a workflow stage
 const uploadSignedVersion = async (req, res) => {
@@ -58,8 +59,9 @@ const uploadSignedVersion = async (req, res) => {
       });
     }
 
-    // Check if user is assigned to this stage or has appropriate role
-    if (stage.assigned_to !== userId && userRole !== 'admin' && userRole !== 'authority') {
+    // Check if user is assigned to this stage or has admin role
+    // Authority users must be assigned to the stage to upload
+    if (stage.assigned_to !== userId && userRole !== 'admin') {
       return res.status(403).json({ error: 'You are not assigned to this stage' });
     }
 
@@ -355,28 +357,44 @@ const getCurrentVersion = async (req, res) => {
 
     const currentVersionNumber = docResult.rows[0].current_version_number || 1;
 
-    const result = await queryOne(
-      `SELECT dv.*, u.name as uploaded_by_name, u.rank as uploaded_by_rank, u.designation as uploaded_by_designation,
-              ws.stage_name, ws.stage_order, ws.status as stage_status
-       FROM document_versions dv
-       LEFT JOIN users u ON dv.uploaded_by = u.id
-       LEFT JOIN workflow_stages ws ON dv.workflow_stage_id = ws.id
-       WHERE dv.document_id = ? AND dv.version_number = ?`,
-      [id, currentVersionNumber]
-    );
+    // Try to get version from document_versions table
+    let result = { rows: [] };
+    try {
+      // Check if document_versions table exists by trying a simple query
+      const tableCheck = await query('SELECT name FROM sqlite_master WHERE type="table" AND name="document_versions"');
+      if (tableCheck.rows.length > 0) {
+        result = await queryOne(
+          `SELECT dv.*, u.name as uploaded_by_name, u.rank as uploaded_by_rank, u.designation as uploaded_by_designation,
+                  ws.stage_name, ws.stage_order, ws.status as stage_status
+           FROM document_versions dv
+           LEFT JOIN users u ON dv.uploaded_by = u.id
+           LEFT JOIN workflow_stages ws ON dv.workflow_stage_id = ws.id
+           WHERE dv.document_id = ? AND dv.version_number = ?`,
+          [id, currentVersionNumber]
+        );
+      }
+    } catch (err) {
+      // If document_versions table doesn't exist or query fails, fall back to original document
+      console.log('Note: document_versions query failed, using original document:', err.message);
+      result = { rows: [] };
+    }
 
     // If no version found, return original document info
-    if (result.rows.length === 0) {
-      const docResult = await queryOne(
+    if (!result || result.rows.length === 0) {
+      const docResult2 = await queryOne(
         'SELECT id, filename, original_filename, file_type, file_size, created_at FROM documents WHERE id = ?',
         [id]
       );
+      if (docResult2.rows.length === 0) {
+        return res.status(404).json({ error: 'Document not found' });
+      }
       return res.json({
         version: {
-          ...docResult.rows[0],
+          ...docResult2.rows[0],
           version_number: 1,
           is_signed_version: false,
-          is_original: true
+          is_original: true,
+          file_size: parseInt(docResult2.rows[0].file_size || 0)
         }
       });
     }
@@ -386,12 +404,12 @@ const getCurrentVersion = async (req, res) => {
       version: {
         ...version,
         is_signed_version: version.is_signed_version === 1,
-        file_size: parseInt(version.file_size)
+        file_size: parseInt(version.file_size || 0)
       }
     });
   } catch (error) {
     console.error('Get current version error:', error);
-    res.status(500).json({ error: 'Failed to fetch current version' });
+    res.status(500).json({ error: 'Failed to fetch current version', details: process.env.NODE_ENV === 'development' ? error.message : undefined });
   }
 };
 
