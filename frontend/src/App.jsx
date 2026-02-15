@@ -1,5 +1,6 @@
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider, useAuth } from './context/AuthContext';
+import { ToastProvider } from './context/ToastContext';
 import ProtectedRoute from './components/ProtectedRoute';
 import Layout from './components/Layout/Layout';
 import Login from './components/Auth/Login';
@@ -7,15 +8,17 @@ import Register from './components/Auth/Register';
 import Home from './pages/Home';
 import Dashboard from './pages/Dashboard';
 import Documents from './pages/Documents';
+import UploadDocument from './pages/UploadDocument';
 import DocumentDetail from './pages/DocumentDetail';
 import PendingApprovals from './pages/PendingApprovals';
 import Admin from './pages/Admin';
+import Loading from './components/ui/Loading';
 
 const AppRoutes = () => {
   const { isAuthenticated, loading } = useAuth();
 
   if (loading) {
-    return <div style={{ padding: '2rem', textAlign: 'center' }}>Loading...</div>;
+    return <Loading fullScreen text="Loading..." />;
   }
 
   return (
@@ -34,6 +37,16 @@ const AppRoutes = () => {
           <ProtectedRoute>
             <Layout>
               <Dashboard />
+            </Layout>
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/upload"
+        element={
+          <ProtectedRoute>
+            <Layout>
+              <UploadDocument />
             </Layout>
           </ProtectedRoute>
         }
@@ -90,7 +103,9 @@ function App() {
   return (
     <Router>
       <AuthProvider>
-        <AppRoutes />
+        <ToastProvider>
+          <AppRoutes />
+        </ToastProvider>
       </AuthProvider>
     </Router>
   );

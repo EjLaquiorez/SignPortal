@@ -95,3 +95,35 @@
     box-sizing: border-box;
   }
 }
+
+/* Tablet optimizations */
+@media (min-width: 769px) and (max-width: 1024px) {
+  .content-grid {
+    grid-template-columns: repeat(2, 1fr) !important;
+  }
+  
+  .stats-grid {
+    grid-template-columns: repeat(3, 1fr) !important;
+  }
+}
+
+/* Large screen optimizations */
+@media (min-width: 1025px) {
+  .content-grid {
+    grid-template-columns: repeat(3, 1fr) !important;
+  }
+}
+
+/* Print styles */
+@media print {
+  .no-print,
+  button,
+  nav,
+  header {
+    display: none !important;
+  }
+  
+  main {
+    padding: 0 !important;
+  }
+}

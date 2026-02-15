@@ -1,8 +1,11 @@
 import { useState, useEffect } from 'react';
+import { Link } from 'react-router-dom';
 import { documentsAPI } from '../services/api';
-import DocumentUpload from '../components/Documents/DocumentUpload';
 import DocumentList from '../components/Documents/DocumentList';
-import DocumentPreview from '../components/Documents/DocumentPreview';
+import Card from '../components/ui/Card';
+import Button from '../components/ui/Button';
+import { SkeletonCard } from '../components/ui/Skeleton';
+import EmptyState from '../components/ui/EmptyState';
 
 const PURPOSE_OPTIONS = [
   'Investigation Report',
@@ -48,8 +51,6 @@ const Documents = () => {
   const [documents, setDocuments] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
-  const [selectedFile, setSelectedFile] = useState(null);
-  const [isLargeScreen, setIsLargeScreen] = useState(window.innerWidth >= 1024);
   
   // Filters
   const [status, setStatus] = useState('');
@@ -65,14 +66,6 @@ const Documents = () => {
   useEffect(() => {
     fetchDocuments();
   }, [status, purpose, officeUnit, classification, priority, search, sortBy, sortOrder]);
-
-  useEffect(() => {
-    const handleResize = () => {
-      setIsLargeScreen(window.innerWidth >= 1024);
-    };
-    window.addEventListener('resize', handleResize);
-    return () => window.removeEventListener('resize', handleResize);
-  }, []);
 
   const fetchDocuments = async () => {
     try {
@@ -98,9 +91,6 @@ const Documents = () => {
     }
   };
 
-  const handleUploadSuccess = () => {
-    fetchDocuments();
-  };
 
   const clearFilters = () => {
     setStatus('');
@@ -123,28 +113,16 @@ const Documents = () => {
       <div style={styles.header}>
         <div>
           <h1 style={styles.title}>Documents</h1>
-          <p style={styles.subtitle}>Manage and track your documents</p>
+          <p style={styles.subtitle}>View, track, and manage your documents</p>
         </div>
-        {!isLargeScreen && (
-          <DocumentUpload onUploadSuccess={handleUploadSuccess} onFileSelect={setSelectedFile} />
-        )}
+        <Link to="/upload">
+          <Button variant="primary">
+            Upload New Document
+          </Button>
+        </Link>
       </div>
 
-      {/* Two-column layout for large screens */}
-      {isLargeScreen ? (
-        <div style={styles.twoColumnLayout}>
-          {/* Left: Document Preview */}
-          <div style={styles.leftColumn}>
-            <DocumentPreview fileData={selectedFile} />
-          </div>
-
-          {/* Right: Upload Form */}
-          <div style={styles.rightColumn}>
-            <DocumentUpload onUploadSuccess={handleUploadSuccess} onFileSelect={setSelectedFile} />
-          </div>
-        </div>
-      ) : (
-        <>
+      <>
           {/* Search and Sort Bar - Mobile/Tablet */}
           <div style={styles.searchBar}>
             <div style={styles.searchInputWrapper}>
@@ -272,10 +250,24 @@ const Documents = () => {
             </div>
           )}
 
-          {error && <div style={styles.error}>{error}</div>}
+          {error && (
+            <Card padding="md" style={{ backgroundColor: 'var(--error-50)', borderColor: 'var(--error-200)', marginBottom: 'var(--spacing-4)' }}>
+              <div style={{ color: 'var(--error-700)', fontSize: 'var(--text-sm)' }}>{error}</div>
+            </Card>
+          )}
           
           {loading ? (
-            <div style={styles.loading}>Loading documents...</div>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: 'var(--spacing-4)' }}>
+              {[1, 2, 3, 4, 5, 6].map((i) => (
+                <SkeletonCard key={i} />
+              ))}
+            </div>
+          ) : documents.length === 0 ? (
+            <EmptyState
+              icon="📄"
+              title="No documents found"
+              description="Get started by uploading your first document"
+            />
           ) : (
             <DocumentList 
               documents={documents.map(doc => ({
@@ -286,153 +278,6 @@ const Documents = () => {
             />
           )}
         </>
-      )}
-
-      {/* Document List and Filters for Large Screens - Below the two columns */}
-      {isLargeScreen && (
-        <>
-          {/* Search and Sort Bar */}
-          <div style={styles.searchBar}>
-            <div style={styles.searchInputWrapper}>
-              <input
-                type="text"
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
-                placeholder="Search by case number, title, or filename..."
-                style={styles.searchInput}
-              />
-            </div>
-            <div style={styles.sortControls}>
-              <select
-                value={sortBy}
-                onChange={(e) => setSortBy(e.target.value)}
-                style={styles.select}
-              >
-                <option value="created_at">Date Created</option>
-                <option value="updated_at">Last Updated</option>
-                <option value="deadline">Deadline</option>
-                <option value="priority">Priority</option>
-                <option value="document_title">Title</option>
-              </select>
-              <select
-                value={sortOrder}
-                onChange={(e) => setSortOrder(e.target.value)}
-                style={styles.select}
-              >
-                <option value="desc">Descending</option>
-                <option value="asc">Ascending</option>
-              </select>
-              <button
-                onClick={() => setShowFilters(!showFilters)}
-                style={styles.filterToggle}
-              >
-                {showFilters ? 'Hide Filters' : 'Show Filters'}
-              </button>
-            </div>
-          </div>
-
-          {/* Advanced Filters */}
-          {showFilters && (
-            <div style={styles.filters}>
-              <div style={styles.filterRow}>
-                <div style={styles.filterGroup}>
-                  <label style={styles.filterLabel}>Status</label>
-                  <select
-                    value={status}
-                    onChange={(e) => setStatus(e.target.value)}
-                    style={styles.select}
-                  >
-                    <option value="">All Status</option>
-                    <option value="pending">Pending</option>
-                    <option value="in_progress">In Progress</option>
-                    <option value="completed">Completed</option>
-                    <option value="rejected">Rejected</option>
-                  </select>
-                </div>
-
-                <div style={styles.filterGroup}>
-                  <label style={styles.filterLabel}>Purpose</label>
-                  <select
-                    value={purpose}
-                    onChange={(e) => setPurpose(e.target.value)}
-                    style={styles.select}
-                  >
-                    <option value="">All Purposes</option>
-                    {PURPOSE_OPTIONS.map(opt => (
-                      <option key={opt} value={opt}>{opt}</option>
-                    ))}
-                  </select>
-                </div>
-
-                <div style={styles.filterGroup}>
-                  <label style={styles.filterLabel}>Office/Unit</label>
-                  <select
-                    value={officeUnit}
-                    onChange={(e) => setOfficeUnit(e.target.value)}
-                    style={styles.select}
-                  >
-                    <option value="">All Units</option>
-                    {UNIT_OPTIONS.map(opt => (
-                      <option key={opt} value={opt}>{opt}</option>
-                    ))}
-                  </select>
-                </div>
-
-                <div style={styles.filterGroup}>
-                  <label style={styles.filterLabel}>Classification</label>
-                  <select
-                    value={classification}
-                    onChange={(e) => setClassification(e.target.value)}
-                    style={styles.select}
-                  >
-                    <option value="">All Classifications</option>
-                    {CLASSIFICATION_OPTIONS.map(opt => (
-                      <option key={opt} value={opt}>{opt}</option>
-                    ))}
-                  </select>
-                </div>
-
-                <div style={styles.filterGroup}>
-                  <label style={styles.filterLabel}>Priority</label>
-                  <select
-                    value={priority}
-                    onChange={(e) => setPriority(e.target.value)}
-                    style={styles.select}
-                  >
-                    <option value="">All Priorities</option>
-                    {PRIORITY_OPTIONS.map(opt => (
-                      <option key={opt} value={opt}>{opt}</option>
-                    ))}
-                  </select>
-                </div>
-
-                <div style={styles.filterGroup}>
-                  <button
-                    onClick={clearFilters}
-                    style={styles.clearButton}
-                  >
-                    Clear All
-                  </button>
-                </div>
-              </div>
-            </div>
-          )}
-
-          {error && <div style={styles.error}>{error}</div>}
-          
-          {loading ? (
-            <div style={styles.loading}>Loading documents...</div>
-          ) : (
-            <DocumentList 
-              documents={documents.map(doc => ({
-                ...doc,
-                isOverdue: isOverdue(doc.deadline)
-              }))} 
-              onUpdate={fetchDocuments} 
-            />
-          )}
-        </>
-      )}
     </div>
   );
 };
@@ -552,27 +397,6 @@ const styles = {
     color: '#64748b',
     fontSize: '0.875rem'
   },
-  twoColumnLayout: {
-    display: 'grid',
-    gridTemplateColumns: '1fr 1fr',
-    gap: '2rem',
-    marginBottom: '2rem',
-    alignItems: 'start',
-    '@media (max-width: 1023px)': {
-      gridTemplateColumns: '1fr'
-    }
-  },
-  leftColumn: {
-    minHeight: '600px',
-    height: 'fit-content',
-    maxHeight: 'calc(100vh - 200px)'
-  },
-  rightColumn: {
-    position: 'sticky',
-    top: '1rem',
-    maxHeight: 'calc(100vh - 100px)',
-    overflowY: 'auto'
-  }
 };
 
 export default Documents;

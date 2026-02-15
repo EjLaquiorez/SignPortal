@@ -1,0 +1,43 @@
+================================================================================
+                    BUDGET JUSTIFICATION DOCUMENT
+================================================================================
+
+REQUEST NUMBER: FIN-2024-004
+DATE: February 12, 2024
+PREPARED BY: PO1 Ana Garcia
+
+================================================================================
+DETAILED BREAKDOWN
+================================================================================
+
+1. FUEL AND TRANSPORTATION (PHP 200,000.00)
+   - Estimated monthly fuel consumption: 2,000 liters
+   - Average fuel price: PHP 65.00 per liter
+   - Monthly requirement: PHP 130,000.00
+   - Q1 requirement (3 months): PHP 390,000.00
+   - Requested: PHP 200,000.00 (partial allocation)
+
+2. OFFICE SUPPLIES (PHP 100,000.00)
+   - Paper and printing supplies: PHP 40,000.00
+   - Writing materials: PHP 20,000.00
+   - Filing and storage: PHP 25,000.00
+   - Miscellaneous supplies: PHP 15,000.00
+
+3. EQUIPMENT MAINTENANCE (PHP 150,000.00)
+   - Computer maintenance: PHP 60,000.00
+   - Vehicle maintenance: PHP 50,000.00
+   - Office equipment: PHP 40,000.00
+
+4. COMMUNICATION EXPENSES (PHP 50,000.00)
+   - Internet and data: PHP 30,000.00
+   - Phone and mobile: PHP 20,000.00
+
+================================================================================
+JUSTIFICATION
+================================================================================
+
+These expenses are essential for maintaining operational effectiveness and
+supporting ongoing activities. All amounts are based on historical data and
+projected needs for the first quarter of 2024.
+
+================================================================================

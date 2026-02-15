@@ -398,22 +398,35 @@ const deleteDocument = async (req, res) => {
 
     // Check permissions - only admin or owner can delete
     if (userRole !== 'admin' && document.uploaded_by !== userId) {
-      return res.status(403).json({ error: 'Access denied' });
+      return res.status(403).json({ error: 'Access denied: You can only delete documents you uploaded' });
+    }
+
+    // Log to history BEFORE deleting (so we have the document_id)
+    try {
+      await execute(
+        'INSERT INTO document_history (document_id, user_id, action, details) VALUES (?, ?, ?, ?)',
+        [id, userId, 'deleted', 'Document deleted']
+      );
+    } catch (historyError) {
+      // If history logging fails, log it but don't fail the delete
+      console.warn('Failed to log delete to history:', historyError);
     }
 
     // Delete document (cascade will handle related records)
-    await execute('DELETE FROM documents WHERE id = ?', [id]);
-
-    // Log to history
-    await execute(
-      'INSERT INTO document_history (document_id, user_id, action, details) VALUES (?, ?, ?, ?)',
-      [id, userId, 'deleted', 'Document deleted']
-    );
+    const deleteResult = await execute('DELETE FROM documents WHERE id = ?', [id]);
+    
+    if (deleteResult.rowCount === 0) {
+      return res.status(404).json({ error: 'Document not found or already deleted' });
+    }
 
     res.json({ message: 'Document deleted successfully' });
   } catch (error) {
     console.error('Delete error:', error);
-    res.status(500).json({ error: 'Failed to delete document' });
+    // Provide more specific error messages
+    if (error.message && error.message.includes('FOREIGN KEY constraint')) {
+      return res.status(400).json({ error: 'Cannot delete document: It is referenced by other records. Please remove dependencies first.' });
+    }
+    res.status(500).json({ error: error.message || 'Failed to delete document' });
   }
 };
 

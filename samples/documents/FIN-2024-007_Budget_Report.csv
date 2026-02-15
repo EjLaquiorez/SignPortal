@@ -1,0 +1,10 @@
+Budget Category,Allocated Amount,Spent Amount,Remaining Balance,Status
+Personnel Salaries,5000000,4500000,500000,On Track
+Operational Expenses,2000000,1200000,800000,On Track
+Equipment Procurement,1500000,750000,750000,On Track
+Maintenance,800000,600000,200000,On Track
+Training,500000,300000,200000,On Track
+Communication,300000,250000,50000,On Track
+Office Supplies,400000,350000,50000,On Track
+Fuel and Transportation,600000,550000,50000,On Track
+TOTAL,11100000,8400000,2700000,On Track

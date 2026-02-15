@@ -1,0 +1,57 @@
+================================================================================
+                    EVIDENCE PHOTO LOG
+================================================================================
+
+CASE REFERENCE: INV-2024-001
+INVESTIGATING OFFICER: PO1 Juan Dela Cruz
+DATE: February 10, 2024
+
+================================================================================
+PHOTOGRAPH RECORD
+================================================================================
+
+Photo #001
+Location: Rear entrance door
+Time: 09:15 HRS
+Description: Forced entry point showing damage to door frame
+Evidence Tag: EVD-001
+
+Photo #002
+Location: Interior of store
+Time: 09:20 HRS
+Description: Disarray of merchandise and storage areas
+Evidence Tag: EVD-002
+
+Photo #003
+Location: Cash register area
+Time: 09:25 HRS
+Description: Empty cash drawer, forced open
+Evidence Tag: EVD-003
+
+Photo #004
+Location: Rear entrance (exterior)
+Time: 09:30 HRS
+Description: Tool marks on door frame
+Evidence Tag: EVD-004
+
+Photo #005
+Location: Fingerprint evidence
+Time: 09:35 HRS
+Description: Latent prints collected from point of entry
+Evidence Tag: EVD-005
+
+================================================================================
+NOTES
+================================================================================
+
+All photographs were taken using department-issued camera.
+Chain of custody maintained throughout evidence collection.
+Fingerprint evidence sent to crime laboratory for analysis.
+
+================================================================================
+PREPARED BY:
+PO1 Juan Dela Cruz
+Investigation Officer
+Badge Number: PNP-2024-001
+
+================================================================================

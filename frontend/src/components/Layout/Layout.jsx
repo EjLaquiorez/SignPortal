@@ -31,6 +31,7 @@ const Layout = ({ children }) => {
 
   return (
     <div style={styles.container}>
+      <a href="#main-content" className="skip-link">Skip to main content</a>
       <Header onMenuClick={() => setSidebarOpen(!sidebarOpen)} />
       <div style={styles.content}>
         <div 
@@ -55,10 +56,14 @@ const Layout = ({ children }) => {
             onClick={() => setSidebarOpen(false)} 
           />
         )}
-        <main style={{
-          ...styles.main,
-          ...(isMobile ? styles.mainMobile : {})
-        }}>
+        <main 
+          id="main-content"
+          style={{
+            ...styles.main,
+            ...(isMobile ? styles.mainMobile : {})
+          }}
+          role="main"
+        >
           {children}
         </main>
       </div>
@@ -71,57 +76,60 @@ const styles = {
     minHeight: '100vh',
     display: 'flex',
     flexDirection: 'column',
-    backgroundColor: '#f8fafc'
+    backgroundColor: 'var(--bg-secondary)',
   },
   content: {
     display: 'flex',
     flex: 1,
-    position: 'relative'
+    position: 'relative',
   },
   sidebarWrapper: {
-    width: '240px',
-    backgroundColor: '#ffffff',
-    borderRight: '1px solid #e2e8f0',
-    transition: 'transform 0.3s ease-in-out',
-    zIndex: 999,
-    flexShrink: 0
+    width: '260px',
+    backgroundColor: 'var(--bg-primary)',
+    borderRight: '1px solid var(--border-color)',
+    transition: 'transform var(--transition-slow)',
+    zIndex: 'var(--z-dropdown)',
+    flexShrink: 0,
   },
   sidebarWrapperMobile: {
     position: 'fixed',
-    top: '60px',
+    top: '64px',
     left: 0,
-    height: 'calc(100vh - 60px)',
-    boxShadow: '2px 0 8px rgba(0,0,0,0.08)',
-    zIndex: 999
+    height: 'calc(100vh - 64px)',
+    boxShadow: 'var(--shadow-lg)',
+    zIndex: 'var(--z-dropdown)',
   },
   sidebarOpen: {
-    transform: 'translateX(0)'
+    transform: 'translateX(0)',
   },
   sidebarClosed: {
-    transform: 'translateX(-100%)'
+    transform: 'translateX(-100%)',
   },
   sidebarContent: {
-    height: '100%'
+    height: '100%',
   },
   overlay: {
     position: 'fixed',
-    top: '60px',
+    top: '64px',
     left: 0,
     right: 0,
     bottom: 0,
-    backgroundColor: 'rgba(0, 0, 0, 0.4)',
-    zIndex: 998
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    zIndex: 'calc(var(--z-dropdown) - 1)',
+    transition: 'opacity var(--transition-base)',
   },
   main: {
     flex: 1,
-    padding: '2rem',
-    backgroundColor: '#ffffff',
+    padding: 'var(--spacing-8)',
+    backgroundColor: 'var(--bg-primary)',
     width: '100%',
-    minHeight: 'calc(100vh - 60px)',
-    overflowX: 'auto'
+    minHeight: 'calc(100vh - 64px)',
+    overflowX: 'auto',
+    maxWidth: '1600px',
+    margin: '0 auto',
   },
   mainMobile: {
-    padding: '1.25rem'
+    padding: 'var(--spacing-4)',
   }
 };
 

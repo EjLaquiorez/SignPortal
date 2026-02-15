@@ -1,0 +1,97 @@
+================================================================================
+                    PHILIPPINE NATIONAL POLICE
+                        LOGISTICS DIVISION
+                    PROCUREMENT REQUEST
+================================================================================
+
+REQUEST NUMBER: PROC-2024-006
+TRACKING NUMBER: TRK-PROC-2024-006
+DATE: February 10, 2024
+CLASSIFICATION: For Official Use Only
+PRIORITY: Priority
+
+================================================================================
+REQUEST TYPE
+================================================================================
+
+Procurement of Office Equipment
+Requesting Unit: Operations Division
+Prepared By: PMAJ Eduardo Ramirez
+Badge Number: PNP-2018-207
+
+================================================================================
+PROCUREMENT DETAILS
+================================================================================
+
+PURPOSE:
+Replacement and upgrade of office equipment for Operations Division
+
+TOTAL AMOUNT:
+PHP 750,000.00
+
+ITEMS REQUESTED:
+
+1. Computer Units (10 units)
+   - Specification: Desktop computers with standard office configuration
+   - Quantity: 10 units
+   - Unit Price: PHP 35,000.00
+   - Total: PHP 350,000.00
+
+2. Printers (5 units)
+   - Specification: Multi-function printers
+   - Quantity: 5 units
+   - Unit Price: PHP 25,000.00
+   - Total: PHP 125,000.00
+
+3. Network Equipment
+   - Switches and routers
+   - Cabling and accessories
+   - Total: PHP 150,000.00
+
+4. Office Furniture
+   - Desks and chairs
+   - Filing cabinets
+   - Total: PHP 125,000.00
+
+================================================================================
+JUSTIFICATION
+================================================================================
+
+The Operations Division requires updated equipment to maintain operational 
+effectiveness. Current equipment is outdated and requires frequent repairs, 
+affecting productivity and operational readiness.
+
+This procurement will:
+- Improve operational efficiency
+- Reduce maintenance costs
+- Enhance data processing capabilities
+- Support increased operational requirements
+
+================================================================================
+BUDGET INFORMATION
+================================================================================
+
+Budget Source: Equipment Procurement Fund 2024
+Budget Code: EQUIP-2024-001
+Available Budget: PHP 1,500,000.00
+Requested Amount: PHP 750,000.00
+
+================================================================================
+APPROVAL CHAIN
+================================================================================
+
+1. Logistics Division Chief - PMAJ Roberto Santos
+2. Unit Commander - PLTCOL Antonio Cruz
+3. Provincial Director - PCOL Ricardo Dela Rosa
+4. Regional Director - PBGEN Alfredo Lim
+
+================================================================================
+PREPARED BY:
+PMAJ Eduardo Ramirez
+Operations Division Chief
+Operations Division
+Badge Number: PNP-2018-207
+
+================================================================================
+END OF REQUEST
+================================================================================

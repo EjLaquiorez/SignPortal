@@ -1,0 +1,114 @@
+[
+  {
+    "document_id": 1,
+    "purpose": "Investigation Report",
+    "office_unit": "Investigation and Detective Management",
+    "stages": [
+      {
+        "stage_name": "Section Chief Review",
+        "stage_order": 1,
+        "required_role": "authority",
+        "assigned_to_email": "supervisor1@pnp.gov.ph",
+        "requires_signed_upload": true
+      },
+      {
+        "stage_name": "Unit Commander Approval",
+        "stage_order": 2,
+        "required_role": "authority",
+        "assigned_to_email": "unitcommander1@pnp.gov.ph",
+        "requires_signed_upload": true
+      },
+      {
+        "stage_name": "Provincial Director Review",
+        "stage_order": 3,
+        "required_role": "authority",
+        "assigned_to_email": "provincialdirector@pnp.gov.ph",
+        "requires_signed_upload": true
+      },
+      {
+        "stage_name": "Regional Director Final Approval",
+        "stage_order": 4,
+        "required_role": "authority",
+        "assigned_to_email": "regionaldirector@pnp.gov.ph",
+        "requires_signed_upload": true
+      }
+    ]
+  },
+  {
+    "document_id": 2,
+    "purpose": "Intelligence Report",
+    "office_unit": "Intelligence Division",
+    "stages": [
+      {
+        "stage_name": "Intelligence Section Chief Review",
+        "stage_order": 1,
+        "required_role": "authority",
+        "assigned_to_email": "supervisor2@pnp.gov.ph",
+        "requires_signed_upload": true
+      },
+      {
+        "stage_name": "Unit Commander Approval",
+        "stage_order": 2,
+        "required_role": "authority",
+        "assigned_to_email": "unitcommander2@pnp.gov.ph",
+        "requires_signed_upload": true
+      },
+      {
+        "stage_name": "Regional Director Final Approval",
+        "stage_order": 3,
+        "required_role": "authority",
+        "assigned_to_email": "regionaldirector@pnp.gov.ph",
+        "requires_signed_upload": true
+      }
+    ]
+  },
+  {
+    "document_id": 3,
+    "purpose": "Administrative Request",
+    "office_unit": "Human Resource and Doctrine",
+    "stages": [
+      {
+        "stage_name": "HR Section Chief Review",
+        "stage_order": 1,
+        "required_role": "authority",
+        "assigned_to_email": "supervisor3@pnp.gov.ph",
+        "requires_signed_upload": true
+      },
+      {
+        "stage_name": "Unit Commander Approval",
+        "stage_order": 2,
+        "required_role": "authority",
+        "assigned_to_email": "unitcommander3@pnp.gov.ph",
+        "requires_signed_upload": true
+      }
+    ]
+  },
+  {
+    "document_id": 4,
+    "purpose": "Financial Request",
+    "office_unit": "Finance Division",
+    "stages": [
+      {
+        "stage_name": "Finance Section Chief Review",
+        "stage_order": 1,
+        "required_role": "authority",
+        "assigned_to_email": "supervisor4@pnp.gov.ph",
+        "requires_signed_upload": true
+      },
+      {
+        "stage_name": "Unit Commander Approval",
+        "stage_order": 2,
+        "required_role": "authority",
+        "assigned_to_email": "unitcommander4@pnp.gov.ph",
+        "requires_signed_upload": true
+      },
+      {
+        "stage_name": "Provincial Director Approval",
+        "stage_order": 3,
+        "required_role": "authority",
+        "assigned_to_email": "provincialdirector@pnp.gov.ph",
+        "requires_signed_upload": true
+      }
+    ]
+  }
+]

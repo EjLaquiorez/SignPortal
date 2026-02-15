@@ -1,0 +1,10 @@
+Item Code,Item Description,Category,Quantity,Unit Price,Total Value,Location,Status
+EQ-001,Desktop Computer,Equipment,15,35000,525000,Operations Office,Active
+EQ-002,Printer MFP,Equipment,8,25000,200000,Admin Office,Active
+EQ-003,Network Switch,Equipment,5,15000,75000,IT Office,Active
+EQ-004,Office Desk,Furniture,20,8000,160000,All Offices,Active
+EQ-005,Office Chair,Furniture,25,5000,125000,All Offices,Active
+EQ-006,File Cabinet,Furniture,10,12000,120000,Records Office,Active
+EQ-007,Projector,Equipment,3,30000,90000,Conference Room,Active
+EQ-008,Scanner,Equipment,4,18000,72000,Admin Office,Active
+TOTAL,,,90,,1467000,,Active

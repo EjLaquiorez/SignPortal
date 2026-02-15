@@ -1,6 +1,9 @@
 import { useState, useEffect, useRef } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
+import { useToast } from '../../context/ToastContext';
+import Button from '../ui/Button';
+import Card from '../ui/Card';
 
 const STORAGE_KEY = 'signingportal_previous_logins';
 const MAX_SAVED_LOGINS = 10;
@@ -17,6 +20,7 @@ const Login = () => {
   const emailInputRef = useRef(null);
   const suggestionsRef = useRef(null);
   const { login } = useAuth();
+  const { success, error: showError } = useToast();
   const navigate = useNavigate();
 
   // Load previous logins and last used email on mount
@@ -90,9 +94,11 @@ const Login = () => {
     if (result.success) {
       // Save email to history on successful login
       saveEmailToHistory(email);
+      success('Welcome back!');
       navigate('/dashboard');
     } else {
       setError(result.error);
+      showError(result.error || 'Login failed');
     }
     
     setLoading(false);
@@ -106,12 +112,14 @@ const Login = () => {
 
   return (
     <div style={styles.container}>
-      <div style={styles.card}>
+      <Card padding="xl" style={{ maxWidth: '420px', width: '100%' }}>
         <div style={styles.header}>
           <h1 style={styles.title}>SigningPortal</h1>
           <p style={styles.subtitle}>Sign in to your account</p>
         </div>
-        {error && <div style={styles.error}>{error}</div>}
+        {error && (
+          <div style={styles.error} role="alert">{error}</div>
+        )}
         <form onSubmit={handleSubmit} style={styles.form}>
           <div style={styles.formGroup}>
             <label style={styles.label}>Email Address</label>
@@ -143,7 +151,7 @@ const Login = () => {
                       style={styles.suggestionItem}
                       onClick={() => handleEmailSelect(suggestion)}
                       onMouseEnter={(e) => {
-                        e.currentTarget.style.backgroundColor = '#f1f5f9';
+                        e.currentTarget.style.backgroundColor = 'var(--gray-100)';
                       }}
                       onMouseLeave={(e) => {
                         e.currentTarget.style.backgroundColor = 'transparent';
@@ -181,11 +189,11 @@ const Login = () => {
                 aria-label={showPassword ? 'Hide password' : 'Show password'}
                 tabIndex={0}
                 onMouseEnter={(e) => {
-                  e.currentTarget.style.color = '#2563eb';
-                  e.currentTarget.style.backgroundColor = '#f1f5f9';
+                  e.currentTarget.style.color = 'var(--primary-500)';
+                  e.currentTarget.style.backgroundColor = 'var(--gray-100)';
                 }}
                 onMouseLeave={(e) => {
-                  e.currentTarget.style.color = '#64748b';
+                  e.currentTarget.style.color = 'var(--gray-500)';
                   e.currentTarget.style.backgroundColor = 'transparent';
                 }}
               >
@@ -232,21 +240,19 @@ const Login = () => {
               <span>Remember me</span>
             </label>
           </div>
-          <button 
+          <Button 
             type="submit" 
-            disabled={loading} 
-            style={{
-              ...styles.button,
-              ...(loading ? styles.buttonDisabled : {})
-            }}
+            disabled={loading}
+            loading={loading}
+            fullWidth
           >
             {loading ? 'Signing in...' : 'Sign In'}
-          </button>
+          </Button>
         </form>
         <p style={styles.linkText}>
           Don't have an account? <Link to="/register" style={styles.link}>Create one</Link>
         </p>
-      </div>
+      </Card>
     </div>
   );
 };
@@ -257,177 +263,152 @@ const styles = {
     justifyContent: 'center',
     alignItems: 'center',
     minHeight: '100vh',
-    backgroundColor: '#f8fafc',
-    padding: '1rem'
-  },
-  card: {
-    backgroundColor: '#ffffff',
-    padding: '2.5rem',
-    borderRadius: '8px',
-    boxShadow: '0 1px 3px rgba(0,0,0,0.1)',
-    width: '100%',
-    maxWidth: '420px',
-    border: '1px solid #e2e8f0'
+    backgroundColor: 'var(--bg-secondary)',
+    padding: 'var(--spacing-4)',
   },
   header: {
-    marginBottom: '2rem',
-    textAlign: 'center'
+    marginBottom: 'var(--spacing-8)',
+    textAlign: 'center',
   },
   title: {
-    marginBottom: '0.5rem',
-    fontSize: '1.75rem',
-    fontWeight: '600',
-    color: '#1e293b',
-    letterSpacing: '-0.025em'
+    marginBottom: 'var(--spacing-2)',
+    fontSize: 'var(--text-3xl)',
+    fontWeight: 'var(--font-semibold)',
+    color: 'var(--text-primary)',
+    letterSpacing: '-0.025em',
   },
   subtitle: {
-    color: '#64748b',
-    fontSize: '0.875rem'
+    color: 'var(--text-secondary)',
+    fontSize: 'var(--text-sm)',
   },
   form: {
     display: 'flex',
-    flexDirection: 'column'
+    flexDirection: 'column',
   },
   formGroup: {
-    marginBottom: '1.25rem'
+    marginBottom: 'var(--spacing-5)',
   },
   label: {
     display: 'block',
-    marginBottom: '0.5rem',
-    color: '#374151',
-    fontSize: '0.875rem',
-    fontWeight: '500'
+    marginBottom: 'var(--spacing-2)',
+    color: 'var(--text-primary)',
+    fontSize: 'var(--text-sm)',
+    fontWeight: 'var(--font-medium)',
   },
   inputWrapper: {
     position: 'relative',
-    width: '100%'
+    width: '100%',
   },
   input: {
     width: '100%',
-    padding: '0.75rem',
-    border: '1px solid #e2e8f0',
-    borderRadius: '6px',
-    fontSize: '0.875rem',
+    padding: 'var(--spacing-3)',
+    border: '1px solid var(--border-color)',
+    borderRadius: 'var(--radius-md)',
+    fontSize: 'var(--text-sm)',
     boxSizing: 'border-box',
-    transition: 'border-color 0.2s ease, box-shadow 0.2s ease'
+    transition: 'border-color var(--transition-base), box-shadow var(--transition-base)',
   },
   passwordWrapper: {
     position: 'relative',
-    width: '100%'
+    width: '100%',
   },
   passwordInput: {
     width: '100%',
-    padding: '0.75rem 2.75rem 0.75rem 0.75rem',
-    border: '1px solid #e2e8f0',
-    borderRadius: '6px',
-    fontSize: '0.875rem',
+    padding: 'var(--spacing-3) var(--spacing-10) var(--spacing-3) var(--spacing-3)',
+    border: '1px solid var(--border-color)',
+    borderRadius: 'var(--radius-md)',
+    fontSize: 'var(--text-sm)',
     boxSizing: 'border-box',
-    transition: 'border-color 0.2s ease, box-shadow 0.2s ease'
+    transition: 'border-color var(--transition-base), box-shadow var(--transition-base)',
   },
   passwordToggle: {
     position: 'absolute',
-    right: '0.5rem',
+    right: 'var(--spacing-2)',
     top: '50%',
     transform: 'translateY(-50%)',
     background: 'none',
     border: 'none',
     cursor: 'pointer',
-    padding: '0.5rem',
+    padding: 'var(--spacing-2)',
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
-    color: '#64748b',
-    transition: 'color 0.2s ease',
+    color: 'var(--gray-500)',
+    transition: 'color var(--transition-base)',
     outline: 'none',
-    borderRadius: '4px'
+    borderRadius: 'var(--radius-sm)',
   },
   suggestions: {
     position: 'absolute',
     top: '100%',
     left: 0,
     right: 0,
-    backgroundColor: '#ffffff',
-    border: '1px solid #e2e8f0',
-    borderRadius: '6px',
-    marginTop: '0.25rem',
-    boxShadow: '0 4px 6px rgba(0,0,0,0.1)',
-    zIndex: 1000,
+    backgroundColor: 'var(--bg-primary)',
+    border: '1px solid var(--border-color)',
+    borderRadius: 'var(--radius-md)',
+    marginTop: 'var(--spacing-1)',
+    boxShadow: 'var(--shadow-md)',
+    zIndex: 'var(--z-dropdown)',
     maxHeight: '200px',
-    overflowY: 'auto'
+    overflowY: 'auto',
   },
   suggestionItem: {
-    padding: '0.75rem',
+    padding: 'var(--spacing-3)',
     cursor: 'pointer',
     display: 'flex',
     alignItems: 'center',
-    gap: '0.5rem',
-    fontSize: '0.875rem',
-    color: '#374151',
-    transition: 'background-color 0.15s ease'
+    gap: 'var(--spacing-2)',
+    fontSize: 'var(--text-sm)',
+    color: 'var(--text-primary)',
+    transition: 'background-color var(--transition-fast)',
   },
   suggestionIcon: {
-    fontSize: '0.875rem'
+    fontSize: 'var(--text-sm)',
   },
   previousLoginsHint: {
-    marginTop: '0.5rem',
-    fontSize: '0.75rem',
-    color: '#64748b',
-    fontStyle: 'italic'
+    marginTop: 'var(--spacing-2)',
+    fontSize: 'var(--text-xs)',
+    color: 'var(--text-secondary)',
+    fontStyle: 'italic',
   },
   checkboxGroup: {
-    marginBottom: '1rem'
+    marginBottom: 'var(--spacing-4)',
   },
   checkboxLabel: {
     display: 'flex',
     alignItems: 'center',
-    gap: '0.5rem',
+    gap: 'var(--spacing-2)',
     cursor: 'pointer',
-    fontSize: '0.875rem',
-    color: '#374151',
-    userSelect: 'none'
+    fontSize: 'var(--text-sm)',
+    color: 'var(--text-primary)',
+    userSelect: 'none',
   },
   checkbox: {
     width: '1rem',
     height: '1rem',
     cursor: 'pointer',
-    accentColor: '#2563eb'
-  },
-  button: {
-    padding: '0.75rem 1.5rem',
-    backgroundColor: '#2563eb',
-    color: 'white',
-    border: 'none',
-    borderRadius: '6px',
-    fontSize: '0.875rem',
-    fontWeight: '500',
-    cursor: 'pointer',
-    marginTop: '0.5rem',
-    transition: 'background-color 0.2s ease'
-  },
-  buttonDisabled: {
-    opacity: 0.6,
-    cursor: 'not-allowed'
+    accentColor: 'var(--primary-500)',
   },
   error: {
-    backgroundColor: '#fef2f2',
-    color: '#dc2626',
-    padding: '0.75rem',
-    borderRadius: '6px',
-    marginBottom: '1.25rem',
-    fontSize: '0.875rem',
-    border: '1px solid #fecaca'
+    backgroundColor: 'var(--error-50)',
+    color: 'var(--error-700)',
+    padding: 'var(--spacing-3)',
+    borderRadius: 'var(--radius-md)',
+    marginBottom: 'var(--spacing-5)',
+    fontSize: 'var(--text-sm)',
+    border: '1px solid var(--error-200)',
   },
   linkText: {
     textAlign: 'center',
-    marginTop: '1.5rem',
-    color: '#64748b',
-    fontSize: '0.875rem'
+    marginTop: 'var(--spacing-6)',
+    color: 'var(--text-secondary)',
+    fontSize: 'var(--text-sm)',
   },
   link: {
-    color: '#2563eb',
+    color: 'var(--primary-500)',
     textDecoration: 'none',
-    fontWeight: '500'
-  }
+    fontWeight: 'var(--font-medium)',
+  },
 };
 
 export default Login;

@@ -1,0 +1,82 @@
+================================================================================
+                    PHILIPPINE NATIONAL POLICE
+                        FINANCE DIVISION
+                    FINANCIAL REQUEST
+================================================================================
+
+REQUEST NUMBER: FIN-2024-004
+TRACKING NUMBER: TRK-FIN-2024-004
+DATE: February 12, 2024
+CLASSIFICATION: For Official Use Only
+PRIORITY: Urgent
+
+================================================================================
+REQUEST TYPE
+================================================================================
+
+Budget Allocation Request
+Requesting Officer: PO1 Ana Garcia
+Badge Number: PNP-2024-004
+Unit: Finance Division
+
+================================================================================
+REQUEST DETAILS
+================================================================================
+
+PURPOSE:
+Operational Expenses for Q1 2024
+
+REQUESTED AMOUNT:
+PHP 500,000.00
+
+BREAKDOWN:
+- Fuel and Transportation: PHP 200,000.00
+- Office Supplies: PHP 100,000.00
+- Equipment Maintenance: PHP 150,000.00
+- Communication Expenses: PHP 50,000.00
+
+BUDGET CODE:
+OPEX-2024-Q1-001
+
+================================================================================
+JUSTIFICATION
+================================================================================
+
+This request is for the operational expenses of the unit for the first 
+quarter of 2024. The requested amount covers essential operational needs 
+including:
+
+1. Fuel and transportation costs for field operations
+2. Office supplies for daily administrative functions
+3. Equipment maintenance to ensure operational readiness
+4. Communication expenses for coordination activities
+
+The allocation is necessary to maintain operational effectiveness and 
+support ongoing activities.
+
+================================================================================
+BUDGET STATUS
+================================================================================
+
+Current Budget Balance: PHP 2,500,000.00
+Requested Amount: PHP 500,000.00
+Remaining Balance (if approved): PHP 2,000,000.00
+
+================================================================================
+PREPARED BY:
+PO1 Ana Garcia
+Finance Clerk
+Finance Division
+Badge Number: PNP-2024-004
+
+================================================================================
+APPROVAL CHAIN
+================================================================================
+
+1. Finance Section Chief - PSSg Lourdes Villanueva
+2. Unit Commander - PLTCOL Rosario Bautista
+3. Provincial Director - PCOL Ricardo Dela Rosa
+
+================================================================================
+END OF REQUEST
+================================================================================

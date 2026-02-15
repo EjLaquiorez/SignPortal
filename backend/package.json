@@ -12,6 +12,7 @@
     "migrate-pnp": "node scripts/migrateToPNP.js",
     "migrate-versioning": "node scripts/migrateToVersioning.js",
     "seed-users": "node scripts/seedSampleUsers.js",
+    "seed-documents": "node scripts/seedSampleDocuments.js",
     "test": "node scripts/testFunctionality.js",
     "stop": "powershell -Command \"Get-NetTCPConnection -LocalPort 5000 -ErrorAction SilentlyContinue | Select-Object -ExpandProperty OwningProcess -Unique | ForEach-Object { Stop-Process -Id $_ -Force }\""
   },

@@ -1,34 +1,114 @@
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import { documentsAPI } from '../../services/api';
 import { DOCUMENT_STATUS } from '../../utils/constants';
 import DocumentViewerModal from './DocumentViewerModal';
+import ConfirmationModal from '../ui/ConfirmationModal';
+import Card from '../ui/Card';
+import Badge from '../ui/Badge';
+import EmptyState from '../ui/EmptyState';
+import Icon from '../ui/Icon';
+import { useToast } from '../../context/ToastContext';
 
 const DocumentList = ({ documents, onUpdate }) => {
   const [previewDocument, setPreviewDocument] = useState(null);
   const [isPreviewOpen, setIsPreviewOpen] = useState(false);
+  const [deleteModal, setDeleteModal] = useState({ isOpen: false, documentId: null, documentTitle: '' });
+  const [openMenuId, setOpenMenuId] = useState(null);
+  const menuRefs = useRef({});
 
   const handlePreview = (doc) => {
     setPreviewDocument(doc);
     setIsPreviewOpen(true);
   };
 
-  const handleDelete = async (id, e) => {
+  const { success, error: showError } = useToast();
+
+  const handleDeleteClick = (doc, e) => {
     e.preventDefault();
-    if (!window.confirm('Are you sure you want to delete this document?')) {
-      return;
-    }
+    setDeleteModal({
+      isOpen: true,
+      documentId: doc.id,
+      documentTitle: doc.document_title || doc.original_filename
+    });
+  };
+
+  const handleDeleteConfirm = async () => {
+    if (!deleteModal.documentId) return;
 
     try {
-      await documentsAPI.delete(id);
+      await documentsAPI.delete(deleteModal.documentId);
       if (onUpdate) {
         onUpdate();
       }
+      success('Document deleted successfully');
+      setDeleteModal({ isOpen: false, documentId: null, documentTitle: '' });
     } catch (err) {
-      alert('Failed to delete document');
-      console.error(err);
+      const errorMessage = err.response?.data?.error || err.message || 'Failed to delete document';
+      showError(errorMessage);
+      console.error('Delete error:', err);
+      setDeleteModal({ isOpen: false, documentId: null, documentTitle: '' });
     }
   };
+
+  const handleDeleteCancel = () => {
+    setDeleteModal({ isOpen: false, documentId: null, documentTitle: '' });
+  };
+
+  const handleMenuToggle = (docId, e) => {
+    e.stopPropagation();
+    setOpenMenuId(openMenuId === docId ? null : docId);
+  };
+
+  const handleMenuClose = () => {
+    setOpenMenuId(null);
+  };
+
+  const handleDownload = async (doc) => {
+    try {
+      handleMenuClose();
+      const response = await documentsAPI.download(doc.id);
+      const blob = new Blob([response.data], { 
+        type: doc.file_type || 'application/octet-stream' 
+      });
+      const url = window.URL.createObjectURL(blob);
+      const a = window.document.createElement('a');
+      a.href = url;
+      a.download = doc.original_filename;
+      window.document.body.appendChild(a);
+      a.click();
+      window.URL.revokeObjectURL(url);
+      window.document.body.removeChild(a);
+      success('Document downloaded successfully');
+    } catch (err) {
+      showError('Failed to download document: ' + (err.response?.data?.error || err.message));
+      console.error('Download error:', err);
+    }
+  };
+
+  // Close menu when clicking outside
+  useEffect(() => {
+    if (!openMenuId) return;
+
+    const handleClickOutside = (event) => {
+      const menuRef = menuRefs.current[openMenuId];
+      if (menuRef && !menuRef.contains(event.target)) {
+        handleMenuClose();
+      }
+    };
+
+    // Use setTimeout to avoid immediate closure when opening menu
+    const timeoutId = setTimeout(() => {
+      document.addEventListener('mousedown', handleClickOutside);
+      document.addEventListener('touchstart', handleClickOutside);
+    }, 0);
+    
+    return () => {
+      clearTimeout(timeoutId);
+      document.removeEventListener('mousedown', handleClickOutside);
+      document.removeEventListener('touchstart', handleClickOutside);
+    };
+  }, [openMenuId]);
 
   const getStatusColor = (status) => {
     const colors = {
@@ -82,9 +162,11 @@ const DocumentList = ({ documents, onUpdate }) => {
 
   if (documents.length === 0) {
     return (
-      <div style={styles.emptyState}>
-        <p style={styles.emptyText}>No documents found</p>
-      </div>
+      <EmptyState
+        icon="📄"
+        title="No documents found"
+        description="Try adjusting your filters or upload a new document"
+      />
     );
   }
 
@@ -98,11 +180,22 @@ const DocumentList = ({ documents, onUpdate }) => {
           setPreviewDocument(null);
         }}
       />
+      <ConfirmationModal
+        isOpen={deleteModal.isOpen}
+        onClose={handleDeleteCancel}
+        onConfirm={handleDeleteConfirm}
+        title="Delete Document"
+        message={`Are you sure you want to delete "${deleteModal.documentTitle}"? This action cannot be undone.`}
+        confirmText="Delete"
+        cancelText="Cancel"
+        confirmColor="#ef4444"
+      />
       {/* Desktop Table View */}
       <div style={styles.tableContainer} className="hide-mobile">
         <table style={styles.table}>
           <thead>
             <tr>
+              <th style={styles.th}></th>
               <th style={styles.th}>Title</th>
               <th style={styles.th}>Purpose</th>
               <th style={styles.th}>Case #</th>
@@ -110,7 +203,6 @@ const DocumentList = ({ documents, onUpdate }) => {
               <th style={styles.th}>Classification</th>
               <th style={styles.th}>Deadline</th>
               <th style={styles.th}>Status</th>
-              <th style={styles.th}>Actions</th>
             </tr>
           </thead>
           <tbody>
@@ -122,21 +214,58 @@ const DocumentList = ({ documents, onUpdate }) => {
                   backgroundColor: doc.is_urgent ? '#fef2f2' : doc.isOverdue ? '#fff7ed' : 'transparent'
                 }}
               >
-                <td style={styles.td}>
-                  <div style={styles.titleCell}>
-                    <Link to={`/documents/${doc.id}`} style={styles.link}>
-                      {doc.document_title || doc.original_filename}
-                    </Link>
-                    {doc.tracking_number && (
-                      <span style={styles.trackingNumber}>📋 {doc.tracking_number}</span>
-                    )}
-                    {doc.is_urgent && (
-                      <span style={styles.urgentBadge}>URGENT</span>
-                    )}
-                    {doc.isOverdue && (
-                      <span style={styles.overdueBadge}>OVERDUE</span>
+                <td style={styles.menuCell}>
+                  <div style={styles.menuContainer} ref={el => menuRefs.current[doc.id] = el}>
+                    <button
+                      onClick={(e) => handleMenuToggle(doc.id, e)}
+                      style={styles.menuButton}
+                      title="Actions"
+                      aria-label="Document actions"
+                    >
+                      <Icon name="dotsVertical" size={18} color="#64748b" />
+                    </button>
+                    {openMenuId === doc.id && (
+                      <div style={styles.menuDropdown} onClick={(e) => e.stopPropagation()}>
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handlePreview(doc);
+                            handleMenuClose();
+                          }}
+                          style={styles.menuItem}
+                          className="menu-item"
+                        >
+                          Preview
+                        </button>
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleDownload(doc);
+                          }}
+                          style={styles.menuItem}
+                          className="menu-item"
+                        >
+                          Download
+                        </button>
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleDeleteClick(doc, e);
+                            handleMenuClose();
+                          }}
+                          style={styles.menuItem}
+                          className="menu-item"
+                        >
+                          Delete
+                        </button>
+                      </div>
                     )}
                   </div>
+                </td>
+                <td style={styles.td}>
+                  <Link to={`/documents/${doc.id}`} style={styles.link}>
+                    {doc.document_title || doc.original_filename}
+                  </Link>
                 </td>
                 <td style={styles.td}>{doc.purpose || 'N/A'}</td>
                 <td style={styles.td}>{doc.case_reference_number || 'N/A'}</td>
@@ -187,46 +316,6 @@ const DocumentList = ({ documents, onUpdate }) => {
                     )}
                   </div>
                 </td>
-                <td style={styles.td}>
-                  <div style={styles.actions}>
-                    <button
-                      onClick={() => handlePreview(doc)}
-                      style={styles.actionButtonPreview}
-                    >
-                      Preview
-                    </button>
-                    <button
-                      onClick={async () => {
-                        try {
-                          const response = await documentsAPI.download(doc.id);
-                          const blob = new Blob([response.data], { 
-                            type: doc.file_type || 'application/octet-stream' 
-                          });
-                          const url = window.URL.createObjectURL(blob);
-                          const a = window.document.createElement('a');
-                          a.href = url;
-                          a.download = doc.original_filename;
-                          window.document.body.appendChild(a);
-                          a.click();
-                          window.URL.revokeObjectURL(url);
-                          window.document.body.removeChild(a);
-                        } catch (err) {
-                          alert('Failed to download document: ' + (err.response?.data?.error || err.message));
-                          console.error('Download error:', err);
-                        }
-                      }}
-                      style={styles.actionButton}
-                    >
-                      Download
-                    </button>
-                    <button
-                      onClick={(e) => handleDelete(doc.id, e)}
-                      style={styles.actionButtonDelete}
-                    >
-                      Delete
-                    </button>
-                  </div>
-                </td>
               </tr>
             ))}
           </tbody>
@@ -238,12 +327,57 @@ const DocumentList = ({ documents, onUpdate }) => {
         {documents.map((doc) => (
           <div key={doc.id} style={styles.card}>
             <div style={styles.cardHeader}>
-              <Link to={`/documents/${doc.id}`} style={styles.cardLink}>
-                <h3 style={styles.cardTitle}>{doc.document_title || doc.original_filename}</h3>
-                {doc.tracking_number && (
-                  <div style={styles.cardTrackingNumber}>📋 {doc.tracking_number}</div>
-                )}
-              </Link>
+              <div style={styles.cardHeaderLeft}>
+                <div style={styles.menuContainer} ref={el => menuRefs.current[`mobile-${doc.id}`] = el}>
+                  <button
+                    onClick={(e) => handleMenuToggle(`mobile-${doc.id}`, e)}
+                    style={styles.menuButton}
+                    title="Actions"
+                    aria-label="Document actions"
+                  >
+                    <Icon name="dotsVertical" size={18} color="#64748b" />
+                  </button>
+                  {openMenuId === `mobile-${doc.id}` && (
+                    <div style={styles.menuDropdown} onClick={(e) => e.stopPropagation()}>
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handlePreview(doc);
+                          handleMenuClose();
+                        }}
+                        style={styles.menuItem}
+                        className="menu-item"
+                      >
+                        Preview
+                      </button>
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleDownload(doc);
+                        }}
+                        style={styles.menuItem}
+                        className="menu-item"
+                      >
+                        Download
+                      </button>
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleDeleteClick(doc, e);
+                          handleMenuClose();
+                        }}
+                        style={styles.menuItem}
+                        className="menu-item"
+                      >
+                        Delete
+                      </button>
+                    </div>
+                  )}
+                </div>
+                <Link to={`/documents/${doc.id}`} style={styles.cardLink}>
+                  <h3 style={styles.cardTitle}>{doc.document_title || doc.original_filename}</h3>
+                </Link>
+              </div>
               <span
                 style={{
                   ...styles.status,
@@ -296,44 +430,6 @@ const DocumentList = ({ documents, onUpdate }) => {
               </p>
               <p style={styles.cardInfo}><strong>Uploaded by:</strong> {doc.uploaded_by_name || 'N/A'}</p>
               <p style={styles.cardInfo}><strong>Created:</strong> {formatDate(doc.created_at)}</p>
-            </div>
-            <div style={styles.cardActions}>
-              <button
-                onClick={() => handlePreview(doc)}
-                style={styles.cardButtonPreview}
-              >
-                Preview
-              </button>
-              <button
-                onClick={async () => {
-                  try {
-                    const response = await documentsAPI.download(doc.id);
-                    const blob = new Blob([response.data], { 
-                      type: doc.file_type || 'application/octet-stream' 
-                    });
-                    const url = window.URL.createObjectURL(blob);
-                    const a = document.createElement('a');
-                    a.href = url;
-                    a.download = doc.original_filename;
-                    document.body.appendChild(a);
-                    a.click();
-                    window.URL.revokeObjectURL(url);
-                    document.body.removeChild(a);
-                  } catch (err) {
-                    alert('Failed to download document: ' + (err.response?.data?.error || err.message));
-                    console.error('Download error:', err);
-                  }
-                }}
-                style={styles.cardButton}
-              >
-                Download
-              </button>
-              <button
-                onClick={(e) => handleDelete(doc.id, e)}
-                style={styles.cardButtonDelete}
-              >
-                Delete
-              </button>
             </div>
           </div>
         ))}
@@ -402,43 +498,57 @@ const styles = {
     display: 'inline-block',
     textTransform: 'capitalize'
   },
-  actions: {
+  menuCell: {
+    padding: '0.5rem',
+    width: '48px',
+    position: 'relative',
+    textAlign: 'center'
+  },
+  menuContainer: {
+    position: 'relative',
+    display: 'inline-block'
+  },
+  menuButton: {
+    padding: '0.375rem',
+    backgroundColor: 'transparent',
+    border: 'none',
+    borderRadius: '6px',
+    cursor: 'pointer',
+    display: 'inline-flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    transition: 'all 0.2s ease',
+    width: '28px',
+    height: '28px',
+    flexShrink: 0
+  },
+  menuDropdown: {
+    position: 'absolute',
+    top: '100%',
+    left: 0,
+    marginTop: '0.25rem',
+    backgroundColor: '#ffffff',
+    border: '1px solid #e2e8f0',
+    borderRadius: '8px',
+    boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)',
+    minWidth: '160px',
+    zIndex: 1000,
+    overflow: 'hidden',
     display: 'flex',
-    gap: '0.5rem',
-    flexWrap: 'wrap'
+    flexDirection: 'column'
   },
-  actionButtonPreview: {
-    padding: '0.375rem 0.875rem',
-    backgroundColor: '#10b981',
-    color: 'white',
+  menuItem: {
+    width: '100%',
+    padding: '0.625rem 0.875rem',
+    backgroundColor: 'transparent',
     border: 'none',
-    borderRadius: '6px',
+    borderBottom: '1px solid #f1f5f9',
     cursor: 'pointer',
-    fontSize: '0.8125rem',
-    fontWeight: '500',
-    transition: 'background-color 0.2s ease'
-  },
-  actionButton: {
-    padding: '0.375rem 0.875rem',
-    backgroundColor: '#2563eb',
-    color: 'white',
-    border: 'none',
-    borderRadius: '6px',
-    cursor: 'pointer',
-    fontSize: '0.8125rem',
-    fontWeight: '500',
-    transition: 'background-color 0.2s ease'
-  },
-  actionButtonDelete: {
-    padding: '0.375rem 0.875rem',
-    backgroundColor: '#ef4444',
-    color: 'white',
-    border: 'none',
-    borderRadius: '6px',
-    cursor: 'pointer',
-    fontSize: '0.8125rem',
-    fontWeight: '500',
-    transition: 'background-color 0.2s ease'
+    display: 'block',
+    fontSize: '0.875rem',
+    color: '#1e293b',
+    transition: 'background-color 0.15s ease',
+    textAlign: 'left'
   },
   cardContainer: {
     display: 'flex',
@@ -460,6 +570,12 @@ const styles = {
     marginBottom: '1rem',
     gap: '0.75rem'
   },
+  cardHeaderLeft: {
+    display: 'flex',
+    alignItems: 'flex-start',
+    gap: '0.5rem',
+    flex: 1
+  },
   cardLink: {
     textDecoration: 'none',
     color: '#2563eb',
@@ -480,46 +596,6 @@ const styles = {
     fontSize: '0.8125rem',
     color: '#64748b',
     lineHeight: '1.5'
-  },
-  cardActions: {
-    display: 'flex',
-    gap: '0.5rem',
-    marginTop: '1rem',
-    paddingTop: '1rem',
-    borderTop: '1px solid #e2e8f0'
-  },
-  cardButtonPreview: {
-    flex: 1,
-    padding: '0.625rem',
-    backgroundColor: '#10b981',
-    color: 'white',
-    border: 'none',
-    borderRadius: '6px',
-    cursor: 'pointer',
-    fontSize: '0.8125rem',
-    fontWeight: '500'
-  },
-  cardButton: {
-    flex: 1,
-    padding: '0.625rem',
-    backgroundColor: '#2563eb',
-    color: 'white',
-    border: 'none',
-    borderRadius: '6px',
-    cursor: 'pointer',
-    fontSize: '0.8125rem',
-    fontWeight: '500'
-  },
-  cardButtonDelete: {
-    flex: 1,
-    padding: '0.625rem',
-    backgroundColor: '#ef4444',
-    color: 'white',
-    border: 'none',
-    borderRadius: '6px',
-    cursor: 'pointer',
-    fontSize: '0.8125rem',
-    fontWeight: '500'
   },
   titleCell: {
     display: 'flex',
@@ -576,6 +652,15 @@ if (typeof document !== 'undefined') {
     .link:hover {
       color: #1d4ed8;
       text-decoration: underline;
+    }
+    button[title]:hover {
+      background-color: #f1f5f9 !important;
+    }
+    .menu-item:hover {
+      background-color: #f8fafc !important;
+    }
+    .menu-item:last-child {
+      border-bottom: none !important;
     }
   `;
   document.head.appendChild(style);

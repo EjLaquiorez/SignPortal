@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import NotificationCenter from '../Notifications/NotificationCenter';
+import Icon from '../ui/Icon';
 
 const Header = ({ onMenuClick }) => {
   const { user, logout } = useAuth();
@@ -35,10 +36,9 @@ const Header = ({ onMenuClick }) => {
             }}
             className="menu-button"
             aria-label="Toggle menu"
+            aria-expanded="false"
           >
-            <svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="2">
-              <path d="M3 5h14M3 10h14M3 15h14"/>
-            </svg>
+            <Icon name="menu" size={20} color="white" />
           </button>
           <h1 style={{
             ...styles.logo,
@@ -62,6 +62,13 @@ const Header = ({ onMenuClick }) => {
               ...styles.logoutButton,
               ...(isMobile ? styles.logoutButtonMobile : {})
             }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.backgroundColor = 'rgba(255,255,255,0.15)';
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.backgroundColor = 'rgba(255,255,255,0.1)';
+            }}
+            aria-label="Logout"
           >
             Logout
           </button>
@@ -73,28 +80,28 @@ const Header = ({ onMenuClick }) => {
 
 const styles = {
   header: {
-    backgroundColor: '#1e293b',
+    backgroundColor: 'var(--gray-900)',
     color: 'white',
-    padding: '0.875rem 0',
-    boxShadow: '0 1px 3px rgba(0,0,0,0.12)',
+    padding: 'var(--spacing-4) 0',
+    boxShadow: 'var(--shadow-sm)',
     position: 'sticky',
     top: 0,
-    zIndex: 1000,
-    borderBottom: '1px solid rgba(255,255,255,0.1)'
+    zIndex: 'var(--z-sticky)',
+    borderBottom: '1px solid rgba(255,255,255,0.1)',
   },
   container: {
-    maxWidth: '1400px',
+    maxWidth: '1600px',
     margin: '0 auto',
-    padding: '0 1.5rem',
+    padding: '0 var(--spacing-6)',
     display: 'flex',
     justifyContent: 'space-between',
     alignItems: 'center',
-    gap: '1rem'
+    gap: 'var(--spacing-4)',
   },
   leftSection: {
     display: 'flex',
     alignItems: 'center',
-    gap: '1rem'
+    gap: 'var(--spacing-4)',
   },
   menuButton: {
     display: 'none',
@@ -102,59 +109,66 @@ const styles = {
     border: 'none',
     color: 'white',
     cursor: 'pointer',
-    padding: '0.5rem',
-    borderRadius: '4px',
-    transition: 'background-color 0.2s',
+    padding: 'var(--spacing-2)',
+    borderRadius: 'var(--radius-md)',
+    transition: 'background-color var(--transition-base)',
     alignItems: 'center',
-    justifyContent: 'center'
+    justifyContent: 'center',
+    minWidth: '40px',
+    minHeight: '40px',
   },
   menuButtonVisible: {
-    display: 'flex'
+    display: 'flex',
   },
   logo: {
     margin: 0,
-    fontSize: '1.25rem',
-    fontWeight: '600',
+    fontSize: 'var(--text-xl)',
+    fontWeight: 'var(--font-semibold)',
     whiteSpace: 'nowrap',
-    letterSpacing: '-0.025em'
+    letterSpacing: '-0.025em',
+    color: 'white',
   },
   logoMobile: {
-    fontSize: '1.125rem'
+    fontSize: 'var(--text-lg)',
   },
   userInfo: {
     display: 'flex',
     alignItems: 'center',
-    gap: '0.75rem',
-    flexWrap: 'wrap'
+    gap: 'var(--spacing-3)',
+    flexWrap: 'wrap',
   },
   userName: {
-    fontWeight: '500',
-    fontSize: '0.875rem'
+    fontWeight: 'var(--font-medium)',
+    fontSize: 'var(--text-sm)',
+    color: 'white',
   },
   divider: {
     opacity: 0.4,
-    fontSize: '0.875rem'
+    fontSize: 'var(--text-sm)',
+    color: 'white',
   },
   userRole: {
-    fontSize: '0.8125rem',
+    fontSize: 'var(--text-xs)',
     opacity: 0.8,
-    textTransform: 'capitalize'
+    textTransform: 'capitalize',
+    color: 'white',
   },
   logoutButton: {
-    padding: '0.5rem 1rem',
+    padding: 'var(--spacing-2) var(--spacing-4)',
     backgroundColor: 'rgba(255,255,255,0.1)',
     color: 'white',
     border: '1px solid rgba(255,255,255,0.2)',
-    borderRadius: '6px',
+    borderRadius: 'var(--radius-md)',
     cursor: 'pointer',
-    fontSize: '0.875rem',
+    fontSize: 'var(--text-sm)',
     whiteSpace: 'nowrap',
-    transition: 'all 0.2s ease',
-    fontWeight: '500'
+    transition: 'all var(--transition-base)',
+    fontWeight: 'var(--font-medium)',
+    minHeight: '40px',
   },
   logoutButtonMobile: {
-    padding: '0.5rem 0.875rem',
-    fontSize: '0.8125rem'
+    padding: 'var(--spacing-2) var(--spacing-3)',
+    fontSize: 'var(--text-xs)',
   }
 };
 
