@@ -92,6 +92,7 @@ npm run test
 
 | Topic | Where |
 |--------|--------|
+| **Where each part of the code lives** | [CODEBASE.md](CODEBASE.md) |
 | Sample files and seeding | [samples/README.md](samples/README.md) |
 | Feature checklist and ideas | [INTERFACE_FUNCTIONALITY_CHECKLIST.md](INTERFACE_FUNCTIONALITY_CHECKLIST.md) |
 | API, access control, test users | [backend/docs/](backend/docs/) |
