@@ -1,412 +1,365 @@
-# SignPortal Interface Functionality Checklist
+# SignPortal — Interface & functionality checklist
 
-This document outlines the interface functionality requirements and identifies areas that need improvement for the SignPortal application.
+This file tracks **what the app already does** versus **sensible next steps**. Sections follow a **user-journey order** (sign in → documents → workflow → signatures → alerts → admin), then **UI and quality**, then **platform and engineering**.
 
----
-
-## 🔐 Authentication & Authorization
-
-### Current Status
-- [x] User login functionality
-- [x] User registration
-- [x] JWT-based authentication
-- [x] Protected routes
-- [x] Role-based access control (Personnel, Authority, Admin)
-
-### Needs Improvement ⚠️
-- [ ] **Password strength validation** - Add visual feedback and requirements
-- [ ] **Password reset functionality** - Currently missing
-- [ ] **Email verification** - No email verification on registration
-- [ ] **Session timeout handling** - Auto-logout on token expiration
-- [ ] **Remember me functionality** - Persistent login option
-- [ ] **Two-factor authentication (2FA)** - Security enhancement
-- [ ] **Account lockout after failed attempts** - Security feature
-- [ ] **User profile management** - Edit profile, change password
-- [ ] **Activity log for user actions** - Security audit trail
+**How to use it:** skim top to bottom for planning; update checkboxes when you ship something; keep “Gaps” honest so demos and README stay accurate.
 
 ---
 
-## 📄 Document Management
+## Table of contents
 
-### Current Status
-- [x] Document upload (max 50MB)
-- [x] Document listing with filters
-- [x] Document download
-- [x] Document status tracking (pending, in_progress, completed, rejected)
-- [x] Document metadata display
-
-### Needs Improvement ⚠️
-- [ ] **Document preview** - Currently shows "File preview not available"
-  - [ ] PDF preview support
-  - [ ] Image preview support
-  - [ ] Office document preview (Word, Excel)
-- [ ] **Document search functionality** - Search by name, date, status
-- [ ] **Bulk document operations** - Select multiple documents
-- [ ] **Document versioning** - Track document revisions
-- [ ] **Document categories/tags** - Organize documents
-- [ ] **Document expiration dates** - Set expiration for documents
-- [ ] **Document sharing** - Share documents with specific users
-- [ ] **Document comments/notes** - Add comments to documents
-- [ ] **File type validation** - Restrict to specific file types
-- [ ] **Upload progress indicator** - Show upload percentage
-- [ ] **Drag and drop upload** - Improve UX
-- [ ] **Document deletion** - Soft delete with recovery option
-- [ ] **Document archive** - Archive old documents
-- [ ] **Export document list** - CSV/Excel export
+1. [Authentication & authorization](#1-authentication--authorization)  
+2. [Document management](#2-document-management)  
+3. [Workflow & approval](#3-workflow--approval)  
+4. [Signatures](#4-signatures)  
+5. [Notifications & communication](#5-notifications--communication)  
+6. [Admin panel](#6-admin-panel)  
+7. [UI & UX](#7-ui--ux)  
+8. [Error handling & validation](#8-error-handling--validation)  
+9. [Performance & optimization](#9-performance--optimization)  
+10. [Security (production hardening)](#10-security-production-hardening)  
+11. [Reporting & analytics](#11-reporting--analytics)  
+12. [Internationalization](#12-internationalization)  
+13. [Native mobile (future)](#13-native-mobile-future)  
+14. [Integrations & API](#14-integrations--api)  
+15. [Testing & QA](#15-testing--qa)  
+16. [Documentation](#16-documentation)  
 
 ---
 
-## 🔄 Workflow & Approval System
+## 1. Authentication & authorization
 
-### Current Status
-- [x] Multi-stage workflow creation
-- [x] Workflow stage display
-- [x] Stage assignment
-- [x] Pending approvals list
-- [x] Workflow status tracking
+### Implemented
 
-### Needs Improvement ⚠️
-- [ ] **Workflow visualization** - Visual flow diagram
-- [ ] **Custom workflow templates** - Save and reuse workflows
-- [ ] **Workflow stage reordering** - Drag and drop stages
-- [ ] **Parallel approval stages** - Multiple approvers at same stage
-- [ ] **Conditional workflows** - Branch based on conditions
-- [ ] **Workflow notifications** - Email/push notifications
-- [ ] **Workflow deadlines** - Set deadlines for stages
-- [ ] **Workflow escalation** - Auto-escalate overdue stages
-- [ ] **Workflow history/audit trail** - Complete timeline
-- [ ] **Workflow comments** - Add notes at each stage
-- [ ] **Reject with reason** - Require reason for rejection
-- [ ] **Workflow cancellation** - Cancel in-progress workflows
-- [ ] **Bulk approval** - Approve multiple documents
-- [ ] **Delegation** - Delegate approval authority
-- [ ] **Workflow analytics** - Time to complete, bottlenecks
+- [x] Login and registration  
+- [x] JWT-based authentication  
+- [x] Protected routes (frontend) and protected API routes (backend)  
+- [x] Role-based access: Personnel, Authority, Admin  
+- [x] Expired/invalid token handling (API 401 clears client session and redirects to login)  
+
+### Gaps and improvements
+
+- [ ] Password strength rules and inline hints  
+- [ ] Password reset (email or admin-assisted)  
+- [ ] Email verification on registration  
+- [ ] Optional “remember me” / longer-lived session policy (document tradeoffs)  
+- [ ] Optional token refresh before expiry (smoother than hard logout)  
+- [ ] Two-factor authentication (2FA)  
+- [ ] Account lockout after repeated failed logins  
+- [ ] User profile: edit name, change password  
+- [ ] Per-user activity history in the UI (beyond server logs)  
 
 ---
 
-## ✍️ Signature Functionality
+## 2. Document management
 
-### Current Status
-- [x] Signature pad (draw signature)
-- [x] Signature image upload
-- [x] Signature storage
-- [x] Signature display
+### Implemented
 
-### Needs Improvement ⚠️
-- [ ] **Signature positioning** - Place signature on document
-- [ ] **Multiple signature fields** - Multiple signature locations
-- [ ] **Signature timestamp** - Add date/time to signature
-- [ ] **Signature verification** - Verify signature authenticity
-- [ ] **Signature templates** - Save signature templates
-- [ ] **Signature preview before save** - Preview on document
-- [ ] **Signature scaling/rotation** - Adjust signature size/angle
-- [ ] **Digital certificate integration** - PKI signatures
-- [ ] **Signature expiration** - Time-limited signatures
-- [ ] **Signature audit log** - Track signature events
-- [ ] **Bulk signing** - Sign multiple documents
-- [ ] **Signature pad improvements** - Better canvas controls
-  - [ ] Undo/redo functionality
-  - [ ] Pen thickness adjustment
-  - [ ] Color selection
-  - [ ] Mobile touch optimization
+- [x] Upload with validation (size limit; configurable, often ~50MB)  
+- [x] Listing with filters and status  
+- [x] Sorting (e.g. by deadline) where exposed in the documents UI  
+- [x] Download  
+- [x] Status tracking: pending, in_progress, completed, rejected  
+- [x] Metadata (title, dates, uploader, etc., per schema)  
+- [x] **Signed file versions** — upload/list/download version history for a document  
+- [x] **Attachments** on a document (separate from main file)  
+- [x] **Document-level deadline** (capture, display, overdue highlighting in several views)  
+- [x] **Drag-and-drop** file choice on upload (where implemented on upload flow)  
 
----
+### Gaps and improvements
 
-## 🎨 User Interface & User Experience
-
-### Current Status
-- [x] Responsive design (basic)
-- [x] Navigation sidebar
-- [x] Dashboard with statistics
-- [x] Basic styling and layout
-
-### Needs Improvement ⚠️
-- [ ] **Loading states** - Skeleton loaders instead of "Loading..."
-- [ ] **Error messages** - More user-friendly error messages
-- [ ] **Success notifications** - Toast notifications for actions
-- [ ] **Empty states** - Better empty state designs
-- [ ] **Dark mode** - Theme toggle
-- [ ] **Accessibility (a11y)** - WCAG 2.1 compliance
-  - [ ] Keyboard navigation
-  - [ ] Screen reader support
-  - [ ] ARIA labels
-  - [ ] Focus indicators
-  - [ ] Color contrast ratios
-- [ ] **Mobile optimization** - Better mobile experience
-- [ ] **Breadcrumb navigation** - Show current location
-- [ ] **Help tooltips** - Contextual help
-- [ ] **Onboarding tour** - First-time user guide
-- [ ] **Keyboard shortcuts** - Power user features
-- [ ] **Pagination** - For large document lists
-- [ ] **Infinite scroll** - Alternative to pagination
-- [ ] **Sorting options** - Sort by date, name, status
-- [ ] **View preferences** - Grid/list view toggle
-- [ ] **Print functionality** - Print documents/reports
-- [ ] **Export functionality** - Export data/reports
+- [ ] Rich **preview** in-browser (PDF/images first; Office formats harder)  
+- [ ] **Search** across title/metadata (full-text optional)  
+- [ ] Bulk select / bulk actions on the list  
+- [ ] Categories, tags, or folders  
+- [ ] Sharing to specific users (beyond workflow assignment)  
+- [ ] Threaded comments or notes on a document  
+- [ ] Tighter **allowlist** of file types (beyond basic checks) + clearer UX when rejected  
+- [ ] Upload **progress bar** (percentage) for large files  
+- [ ] Soft delete, archive, or restore  
+- [ ] Export document list (CSV/Excel)  
 
 ---
 
-## 👥 Admin Panel
+## 3. Workflow & approval
 
-### Current Status
-- [x] Admin route protection
-- [ ] **Admin functionality** - Currently shows "coming soon"
+### Implemented
 
-### Needs Improvement ⚠️ (HIGH PRIORITY)
-- [ ] **User management**
-  - [ ] View all users
-  - [ ] Create/edit/delete users
-  - [ ] Assign roles
-  - [ ] Activate/deactivate users
-  - [ ] Reset user passwords
-- [ ] **System settings**
-  - [ ] Configure workflow defaults
-  - [ ] Set file size limits
-  - [ ] Configure allowed file types
-  - [ ] System notifications settings
-- [ ] **Audit logs**
-  - [ ] View all system activities
-  - [ ] Filter by user, date, action
-  - [ ] Export audit logs
-- [ ] **Analytics dashboard**
-  - [ ] Document statistics
-  - [ ] User activity metrics
-  - [ ] Workflow performance
-  - [ ] System health monitoring
-- [ ] **Role management**
-  - [ ] Create custom roles
-  - [ ] Assign permissions
-- [ ] **Document management**
-  - [ ] View all documents
-  - [ ] Delete documents
-  - [ ] Override approvals
-- [ ] **Backup and restore**
-  - [ ] Database backup
-  - [ ] Document backup
-- [ ] **Email configuration**
-  - [ ] SMTP settings
-  - [ ] Email templates
+- [x] Multi-stage workflow creation (including automatic creation on upload)  
+- [x] Stage display, assignment, and status  
+- [x] Pending approvals view  
+- [x] **Deadlines** at document and stage level (display + overdue treatment in UI)  
+- [x] Rejection path with **reason** surfaced in the UI when provided  
+- [x] Backend **workflow templates** (configuration-driven; not necessarily a user-facing template editor)  
+
+### Gaps and improvements
+
+- [ ] Standalone **flow diagram** (visual graph beyond step list)  
+- [ ] **User-defined** saved workflow templates (create/edit in UI)  
+- [ ] Drag-and-drop **reorder** of stages before submission  
+- [ ] **Parallel** approvers at one stage  
+- [ ] **Conditional** branching between stages  
+- [ ] **Email** (or SMS) when a stage is waiting on someone  
+- [ ] Automatic **escalation** when overdue (notify manager, reassign, etc.)  
+- [ ] Full **timeline** / audit view dedicated to one workflow run  
+- [ ] Comments per stage (threaded)  
+- [ ] **Require** rejection reason (if not already enforced end-to-end)  
+- [ ] Cancel in-flight workflow  
+- [ ] Bulk approve  
+- [ ] Delegation (“approve on my behalf”)  
+- [ ] Analytics: time-in-stage, bottlenecks  
 
 ---
 
-## 🔔 Notifications & Communication
+## 4. Signatures
 
-### Current Status
-- [ ] **No notification system** - Currently missing
+### Implemented
 
-### Needs Improvement ⚠️ (HIGH PRIORITY)
-- [ ] **Email notifications**
-  - [ ] Document uploaded
-  - [ ] Document requires signature
-  - [ ] Document requires approval
-  - [ ] Document approved/rejected
-  - [ ] Workflow stage assigned
-  - [ ] Document completed
-- [ ] **In-app notifications**
-  - [ ] Notification center/bell icon
-  - [ ] Real-time updates
-  - [ ] Mark as read/unread
-- [ ] **Notification preferences**
-  - [ ] User notification settings
-  - [ ] Email frequency
-  - [ ] Notification types
-- [ ] **Push notifications** - Browser push notifications
+- [x] Draw signature on pad  
+- [x] Upload signature image  
+- [x] Persist and display signatures with document context  
+
+### Gaps and improvements
+
+- [ ] Place signature on a **coordinates** overlay of a rendered document  
+- [ ] Multiple signature fields / anchors  
+- [ ] Prominent **timestamp** on saved signature display (if not already stored visibly)  
+- [ ] Cryptographic / PKI verification (out of scope for many class projects; note if asked)  
+- [ ] Saved personal signature templates  
+- [ ] Preview on document before commit  
+- [ ] Resize / rotate signature graphic  
+- [ ] Signature-focused audit log in UI  
+- [ ] Bulk sign  
+- [ ] Pad UX: undo/redo, pen width, color, stronger touch targets  
 
 ---
 
-## 🛡️ Error Handling & Validation
+## 5. Notifications & communication
 
-### Current Status
-- [x] Basic error handling
-- [x] File size validation
-- [x] File type validation (basic)
+### Implemented
 
-### Needs Improvement ⚠️
-- [ ] **Comprehensive form validation**
-  - [ ] Real-time validation feedback
-  - [ ] Field-level error messages
-  - [ ] Required field indicators
-- [ ] **Error boundary** - React error boundaries
-- [ ] **Network error handling** - Offline detection
-- [ ] **Retry mechanisms** - Retry failed operations
-- [ ] **Error logging** - Client-side error tracking
-- [ ] **User-friendly error messages** - Replace technical errors
-- [ ] **Validation feedback** - Visual indicators
-- [ ] **Input sanitization** - XSS prevention
-- [ ] **File validation** - Virus scanning integration
+- [x] **In-app** notification center (header), list + unread count  
+- [x] Polling for updates (periodic refresh)  
+- [x] Mark one / mark all as read (via API)  
+
+### Gaps and improvements
+
+- [ ] **Email** notifications (uploaded, needs signature, needs approval, completed, rejected, etc.)  
+- [ ] True **real-time** delivery (WebSocket/SSE) instead of or in addition to polling  
+- [ ] User **preferences** (which events, email vs in-app only)  
+- [ ] Browser **push** notifications  
 
 ---
 
-## ⚡ Performance & Optimization
+## 6. Admin panel
 
-### Current Status
-- [x] Basic React app structure
+### Implemented
 
-### Needs Improvement ⚠️
-- [ ] **Code splitting** - Lazy load routes
-- [ ] **Image optimization** - Compress and optimize images
-- [ ] **Caching strategy** - Cache API responses
-- [ ] **Pagination** - Reduce initial load time
-- [ ] **Virtual scrolling** - For long lists
-- [ ] **Debouncing** - Search input debouncing
-- [ ] **Memoization** - React.memo, useMemo, useCallback
-- [ ] **Bundle size optimization** - Analyze and reduce
-- [ ] **API response optimization** - Pagination, filtering on server
-- [ ] **Progressive loading** - Load critical content first
-- [ ] **Service worker** - Offline functionality
-- [ ] **CDN integration** - Static asset delivery
+- [x] Admin-only route protection  
 
----
+### Gaps and improvements (high impact for “operations” use cases)
 
-## 🔒 Security Features
-
-### Current Status
-- [x] JWT authentication
-- [x] Protected routes
-- [x] Role-based access
-
-### Needs Improvement ⚠️ (HIGH PRIORITY)
-- [ ] **HTTPS enforcement** - Force HTTPS in production
-- [ ] **Content Security Policy (CSP)** - XSS protection
-- [ ] **Rate limiting** - Prevent abuse
-- [ ] **Input sanitization** - Prevent injection attacks
-- [ ] **File upload security**
-  - [ ] Virus scanning
-  - [ ] File type verification (magic bytes)
-  - [ ] File size limits
-  - [ ] Quarantine suspicious files
-- [ ] **Session management**
-  - [ ] Secure token storage
-  - [ ] Token refresh mechanism
-  - [ ] Concurrent session limits
-- [ ] **Audit logging** - Track all security events
-- [ ] **Password policies** - Enforce strong passwords
-- [ ] **Account security**
-  - [ ] Login history
-  - [ ] Suspicious activity alerts
-  - [ ] IP whitelisting (optional)
+- [ ] **Replace placeholder admin screen** (“coming soon”) with real admin tools  
+- [ ] User management: list, create/edit/deactivate, roles, password reset  
+- [ ] System settings: defaults, upload limits, allowed types  
+- [ ] Audit log viewer (filter, export)  
+- [ ] Analytics beyond the main user dashboard (system-wide)  
+- [ ] Optional: custom roles and permission matrix  
+- [ ] Optional: override/delete documents, force-complete workflow (dangerous; audit required)  
+- [ ] Backup/restore documentation or scripts for operators  
+- [ ] SMTP settings for email features once added  
 
 ---
 
-## 📊 Reporting & Analytics
+## 7. UI & UX
 
-### Current Status
-- [x] Basic dashboard statistics
+### Implemented
 
-### Needs Improvement ⚠️
-- [ ] **Document reports**
-  - [ ] Documents by status
-  - [ ] Documents by date range
-  - [ ] Documents by user
-- [ ] **Workflow reports**
-  - [ ] Average completion time
-  - [ ] Bottleneck identification
-  - [ ] Stage performance
-- [ ] **User activity reports**
-  - [ ] User activity logs
-  - [ ] Signing activity
-  - [ ] Approval activity
-- [ ] **Export reports** - PDF/Excel export
-- [ ] **Charts and graphs** - Visual data representation
-- [ ] **Custom report builder** - User-defined reports
-- [ ] **Scheduled reports** - Automated report generation
+- [x] Responsive layout (sidebar, header, mobile menu patterns)  
+- [x] Dashboard with statistics and links  
+- [x] **Toast** feedback for actions (`ToastContext`)  
+- [x] **Skeleton** and **Loading** components  
+- [x] **EmptyState** component for empty lists  
+- [x] Theme-oriented styling (`theme.css`, `responsive.css`)  
 
----
+### Gaps and improvements
 
-## 🌐 Internationalization (i18n)
-
-### Current Status
-- [ ] **No internationalization** - English only
-
-### Needs Improvement ⚠️
-- [ ] **Multi-language support**
-  - [ ] Language selector
-  - [ ] Translation files
-  - [ ] RTL language support
-- [ ] **Date/time localization** - Format by locale
-- [ ] **Currency formatting** - If applicable
-- [ ] **Number formatting** - Locale-specific
+- [ ] Apply skeletons/empty states **consistently** on every slow or empty view  
+- [ ] Friendlier, consistent **error** copy (map API errors to human text)  
+- [ ] Dark mode toggle  
+- [ ] Accessibility pass: keyboard paths, focus rings, ARIA, contrast (WCAG-oriented)  
+- [ ] Stronger **mobile** polish (tables, modals, touch targets)  
+- [ ] Breadcrumbs  
+- [ ] Contextual help / tooltips  
+- [ ] Onboarding tour for first login  
+- [ ] Keyboard shortcuts  
+- [ ] Pagination or virtualized lists for very large datasets  
+- [ ] Optional grid vs list view for documents  
+- [ ] Print / export from UI where reports exist  
 
 ---
 
-## 📱 Mobile App Features
+## 8. Error handling & validation
 
-### Current Status
-- [x] Responsive web design
+### Implemented
 
-### Future Considerations
-- [ ] **Native mobile apps** - iOS/Android
-- [ ] **Mobile-specific features**
-  - [ ] Camera integration for document capture
-  - [ ] Touch-optimized signature pad
-  - [ ] Offline mode
-  - [ ] Push notifications
+- [x] Basic API error responses and client handling  
+- [x] File size and basic type checks on upload  
 
----
+### Gaps and improvements
 
-## 🔧 Integration & API
-
-### Current Status
-- [x] REST API structure
-
-### Needs Improvement ⚠️
-- [ ] **API documentation** - Swagger/OpenAPI docs
-- [ ] **Webhook support** - External integrations
-- [ ] **Third-party integrations**
-  - [ ] Cloud storage (Google Drive, Dropbox)
-  - [ ] Email services
-  - [ ] Calendar integration
-  - [ ] CRM integration
-- [ ] **API versioning** - Version control
-- [ ] **Rate limiting documentation** - API limits
-- [ ] **API authentication** - API keys for external use
+- [ ] Form-level validation with inline field errors  
+- [ ] React **error boundary** on route or app shell  
+- [ ] Offline / flaky network detection and retry  
+- [ ] Client error logging (e.g. to a service) in production  
+- [ ] Stronger input sanitization story for rich text if added later  
+- [ ] Virus/malware scanning on upload (organizational requirement)  
 
 ---
 
-## 📝 Testing & Quality Assurance
+## 9. Performance & optimization
 
-### Needs Improvement ⚠️
-- [ ] **Unit tests** - Component testing
-- [ ] **Integration tests** - API testing
-- [ ] **E2E tests** - End-to-end testing
-- [ ] **Accessibility testing** - a11y testing
-- [ ] **Performance testing** - Load testing
-- [ ] **Security testing** - Penetration testing
-- [ ] **Cross-browser testing** - Browser compatibility
-- [ ] **Mobile device testing** - Device compatibility
+### Implemented
 
----
+- [x] Standard React + Vite dev/build pipeline  
 
-## 📚 Documentation
+### Gaps and improvements
 
-### Needs Improvement ⚠️
-- [ ] **User guide** - End-user documentation
-- [ ] **Admin guide** - Administrator documentation
-- [ ] **Developer documentation** - Code documentation
-- [ ] **API documentation** - API reference
-- [ ] **Video tutorials** - How-to videos
-- [ ] **FAQ section** - Common questions
-- [ ] **Change log** - Version history
+- [ ] Lazy-loaded routes (code splitting)  
+- [ ] Memoization where lists are heavy  
+- [ ] Server-side pagination/filtering for huge document sets  
+- [ ] Virtual scrolling for long lists  
+- [ ] Debounced search when implemented  
+- [ ] Bundle analysis and trim  
+- [ ] Service worker / offline (only if product needs it)  
+- [ ] CDN for static assets in production  
 
 ---
 
-## Priority Legend
+## 10. Security (production hardening)
 
-- ⚠️ **Needs Improvement** - Feature exists but needs enhancement
-- 🔴 **HIGH PRIORITY** - Critical missing functionality
-- 🟡 **MEDIUM PRIORITY** - Important but not critical
-- 🟢 **LOW PRIORITY** - Nice to have
+### Implemented (baseline)
+
+- [x] JWT authentication  
+- [x] Password hashing (bcrypt)  
+- [x] Role checks on sensitive operations  
+
+### Gaps and improvements
+
+- [ ] HTTPS-only deployment configuration  
+- [ ] Content Security Policy and other security headers  
+- [ ] Rate limiting on auth and upload endpoints  
+- [ ] Token storage strategy review (httpOnly cookies vs localStorage tradeoffs)  
+- [ ] File inspection: magic-byte type check, quarantine, scanning  
+- [ ] Structured security/audit logging  
+- [ ] Optional: login history, alerts, IP allowlists  
 
 ---
 
-## Notes
+## 11. Reporting & analytics
 
-- This checklist should be reviewed and updated regularly
-- Mark items as complete when implemented
-- Add new items as requirements evolve
-- Prioritize based on user feedback and business needs
+### Implemented
+
+- [x] Dashboard statistics for the logged-in user’s scope  
+
+### Gaps and improvements
+
+- [ ] Saved reports (by status, date range, user)  
+- [ ] Workflow timing / bottleneck reports  
+- [ ] Export PDF/Excel  
+- [ ] Charts  
+- [ ] Scheduled reports  
 
 ---
 
-**Last Updated:** 2026-01-XX
-**Version:** 1.0
+## 12. Internationalization
+
+### Implemented
+
+- [x] English UI only  
+
+### Gaps and improvements
+
+- [ ] Language selector and translation files  
+- [ ] Locale-aware dates/numbers  
+- [ ] RTL layout support if targeting RTL languages  
+
+---
+
+## 13. Native mobile (future)
+
+### Implemented
+
+- [x] Responsive web (primary mobile strategy today)  
+
+### Gaps and improvements
+
+- [ ] Native iOS/Android apps  
+- [ ] Camera capture, offline, OS-level push (if native)  
+
+---
+
+## 14. Integrations & API
+
+### Implemented
+
+- [x] REST API consumed by the SPA  
+
+### Gaps and improvements
+
+- [ ] OpenAPI/Swagger documentation  
+- [ ] Webhooks for external systems  
+- [ ] Integrations: cloud storage, calendar, CRM (product-dependent)  
+- [ ] API versioning and API keys for machine clients  
+
+---
+
+## 15. Testing & QA
+
+### Implemented
+
+- [x] Backend **smoke / functionality** script (`npm run test` in backend — see backend docs)  
+
+### Gaps and improvements
+
+- [ ] Frontend unit tests (components/hooks)  
+- [ ] API integration test suite in CI  
+- [ ] End-to-end tests (Playwright/Cypress)  
+- [ ] Accessibility and performance testing as part of release habit  
+- [ ] Cross-browser and device matrix for major releases  
+
+---
+
+## 16. Documentation
+
+### Implemented
+
+- [x] Root `README.md`, `CODEBASE.md`, `backend/docs/`, samples guides  
+
+### Gaps and improvements
+
+- [ ] End-user manual (PDF or in-app help)  
+- [ ] Admin runbook (deploy, backup, rotate secrets)  
+- [ ] Video walkthroughs  
+- [ ] FAQ and changelog discipline  
+
+---
+
+## Prioritization
+
+Use **product risk** and **demo promises** to order work, not this file’s order.
+
+| Priority | Meaning |
+|----------|---------|
+| **High** | Blocks real use, security, or a committed roadmap item (e.g. admin tools, email alerts). |
+| **Medium** | Clear user pain or competitive parity (preview, search, bulk actions). |
+| **Low** | Nice-to-have polish (themes, shortcuts, extra integrations). |
+
+---
+
+## Maintenance
+
+- Revisit after major features merge; fix “Implemented” if the code drifted.  
+- Prefer a short note and date in git when you bulk-update this file.  
+
+**Last updated:** 2026-03-23  
