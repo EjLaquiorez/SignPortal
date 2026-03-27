@@ -1,60 +1,28 @@
-# SignPortal — Interface & functionality checklist (short)
+# SignPortal — What’s done & what’s next
 
-What works today vs what to build next. Update when you ship; see [CODEBASE.md](CODEBASE.md) for where things live.
+Plain list for planning. Change it when the app changes. Code locations: [CODEBASE.md](CODEBASE.md).
 
----
+## Already in the app
 
-## Core features
+- Sign up, log in, JWT, three roles (Personnel, Authority, Admin), pages hidden by role  
+- Upload files, list and filter them, download, track status, deadlines, attachments, signed versions  
+- Multi-step approve/sign workflow, pending queue, in-app notifications  
+- Draw or upload a signature, show it on the document  
+- Dashboard, toasts, basic responsive layout  
 
-| Area | Done | Next (examples) |
-|------|------|------------------|
-| **Auth** | Login/register, JWT, protected routes, Personnel / Authority / Admin, 401 → logout | Password reset, verification, strength hints, profile & change-password, optional 2FA / lockout |
-| **Documents** | Upload (size/type checks, drag-drop), list/filter/sort, download, status, metadata, **versions**, **attachments**, **deadlines**, overdue cues | In-browser preview, search, bulk actions, tags, comments, stricter type allowlist, upload progress %, archive/export |
-| **Workflow** | Multi-stage flows, pending queue, stage deadlines, rejection reason in UI, config-level templates | Visual flowchart, user-editable templates, parallel/conditional stages, **email** nudges, escalation, stage comments, cancel/bulk/delegate, analytics |
-| **Signatures** | Draw + upload image, store, show on document | Overlay placement, multiple fields, PKI (if needed), templates, better pad controls |
-| **Notifications** | In-app center, polling, mark read | Email, WebSocket/SSE, preferences, browser push |
-| **Admin** | Route locked to admin | Replace “coming soon”: user CRUD, settings, audit viewer, SMTP when email exists |
+## Common next steps
 
----
+- Rich file preview, search, bulk actions, comments/tags  
+- Email (or push) when someone must act  
+- Real admin tools (the admin page is still a placeholder)  
+- Password reset, profile edit, stronger password rules  
+- Production hardening: HTTPS, rate limits, safer file checks, clearer errors  
+- Full test suite (frontend + end-to-end) and user-facing help docs  
 
-## UI & UX
+## If you only fix a few things
 
-**Done:** Responsive shell, dashboard, toasts, skeleton/loading/empty components, theme CSS.
-
-**Next:** Consistent empty/skeleton everywhere, clearer errors, a11y pass, dark mode, mobile polish, breadcrumbs/help, pagination/virtual lists for huge tables.
-
----
-
-## Quality, security & production
-
-**Done:** Basic API errors; upload validation; bcrypt password hashing; role checks.
-
-**Next:** Inline form validation, error boundaries, retry/offline messaging; lazy routes, server pagination, bundle trim; **HTTPS**, CSP, rate limits, tighter file checks (magic bytes), token storage review, security audit logging.
+Start with what you will **show in a demo**: usually **admin**, **email or clearer “you have work” cues**, and **preview or search**.
 
 ---
 
-## Reports, i18n, mobile, API
-
-**Done:** Per-user dashboard stats; English; responsive web; REST API for the app.
-
-**Next:** Saved/export reports and charts; locales + RTL; native apps only if required; OpenAPI, webhooks, API keys.
-
----
-
-## Engineering & docs
-
-**Done:** Backend smoke tests (`npm run test`); README, CODEBASE, `backend/docs/`, samples.
-
-**Next:** FE unit tests, API integration + E2E in CI; user/admin guides, changelog habit.
-
----
-
-## Priorities
-
-- **High** — Real admin tools, email alerts, production security basics, anything you promise in demo.  
-- **Medium** — Preview, search, bulk ops, workflow polish.  
-- **Low** — Themes, shortcuts, extra integrations.
-
----
-
-**Last updated:** 2026-03-23  
+*Updated 2026-03-23*
