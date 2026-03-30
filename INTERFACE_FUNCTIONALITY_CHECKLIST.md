@@ -1,86 +1,117 @@
-# SignPortal — Interface & functionality overview
+# SignPortal — Technical capability & architecture notes
 
-This document **informs** anyone reading the repo what the application **already does**, what is **thin or missing**, and **where to look next**. It is not a spec; it is a snapshot you can refresh when major features land.
-
----
-
-## Purpose
-
-- **Stakeholders & reviewers:** Quick sense of scope without running the app.  
-- **Developers:** Rough backlog aligned with the real codebase.  
-- **Presenters:** Honest talking points for demos (what to show vs what to call “future work”).
-
-For **file-by-file locations**, use [CODEBASE.md](CODEBASE.md). For **setup and run**, use [README.md](README.md).
+Engineering-oriented snapshot of **stack**, **API surface**, **persistence model**, and **implementation gaps**. For directory-level file index see [CODEBASE.md](CODEBASE.md); for operator setup see [README.md](README.md).
 
 ---
 
-## What the application does today
+## Stack
 
-### Identity and access
-
-Users **register** and **log in** with **JWT** auth. The UI and API enforce **roles**: **Personnel** (upload and participate in signing), **Authority** (approve/review), and **Admin** (route exists; see below). Invalid or expired tokens typically **clear the session** and send the user back to login.
-
-### Documents
-
-Users can **upload** files (with size validation and drag-and-drop on the upload flow), **list and filter** documents, **download** them, and see **status** (for example pending, in progress, completed, rejected). The app supports **metadata** (titles, dates, etc.), **document-level deadlines** with overdue handling in several screens, **attachments** separate from the main file, and **signed file versions** (history of uploaded signed copies).
-
-### Workflow and approvals
-
-Uploading can **create a multi-stage workflow**. Users see **stage progress**, a **pending approvals** view, and **rejection** with **reason** shown when the backend provides it. Workflow shape is partly driven by **server-side templates**, not necessarily a full visual “template designer” in the UI.
-
-### Signatures
-
-Users can **draw** a signature on a pad or **upload** a signature image; signatures are **stored and displayed** in document context.
-
-### Notifications
-
-There is an **in-app notification center** (with polling and marking items read). There is **no full email or push** product yet.
-
-### Dashboard and UI
-
-A **dashboard** shows useful counts and entry points. The app uses **responsive** layout patterns, **toasts** for feedback, and shared **loading / skeleton / empty-state** components in many places.
-
-### Admin
-
-The **admin URL is protected**, but the **admin screen is largely a placeholder** (“coming soon”). Day-to-day user and system administration is not fully implemented in the interface.
-
-### Quality and operations
-
-The backend includes a **functional/smoke test script** (`npm run test` from `backend` — see [backend/docs/TEST_GUIDE.md](backend/docs/TEST_GUIDE.md)). **Production-grade** hardening (HTTPS, rate limiting, advanced scanning, full E2E suites) is **not** described as complete here.
+| Layer | Technology |
+|--------|------------|
+| API | **Node.js**, **Express** 4.x, `express.json` / `urlencoded` |
+| Persistence | **SQLite 3** via `sqlite3` driver; path from `DB_PATH` or default `backend/signingportal.db` |
+| Auth | **JWT** (`jsonwebtoken`), passwords hashed with **bcryptjs** |
+| File ingest | **Multer** (`utils/fileHandler.js`) for multipart uploads; binary body stored per feature (see below) |
+| SPA | **React**, **Vite**, **React Router**, **axios** (`services/api.js`) |
+| Client config | `VITE_API_URL` or default `http://localhost:5000/api` |
 
 ---
 
-## Known gaps and typical next steps
+## Backend layout
 
-Priorities depend on your course or product goals; these are **common** follow-ons:
+**Entry:** `backend/src/server.js` — CORS (localhost + optional `CORS_ORIGIN`), mounts routers, global error handler, `GET /api/health`.
 
-| Theme | Examples |
-|--------|----------|
-| **Admin** | User list/CRUD, roles, system settings, audit log viewer, SMTP when email exists |
-| **Documents** | In-browser **preview** (PDF/images first), **search**, bulk actions, tags/comments, upload progress bar |
-| **Workflow** | Email when action needed, richer **visual** flow, parallel/conditional stages, escalation |
-| **Account** | Password **reset**, email **verification**, profile and change-password |
-| **Security & scale** | HTTPS, CSP, rate limits, tighter upload checks, token storage review |
-| **Tests & docs** | Frontend unit tests, CI, E2E; end-user or admin guides |
+**Routers** (all prefixed by mount path):
+
+| Mount | Module | Responsibility |
+|--------|--------|----------------|
+| `/api/auth` | `routes/auth.js` | Register, login, `GET /me` |
+| `/api/documents` | `routes/documents.js` | CRUD-ish document lifecycle, upload, list, download |
+| `/api/documents` | `routes/documentVersions.js` | `/:id/versions` signed version upload/list/download |
+| `/api/workflow` | `routes/workflow.js` | Stage progression, approvals |
+| `/api/signatures` | `routes/signatures.js` | Signature records tied to stages |
+| `/api` | `routes/attachments.js` | `POST/GET /documents/:id/attachments`, `GET/DELETE /attachments/...` |
+| `/api/notifications` | `routes/notifications.js` | In-app notifications CRUD/read state |
+
+**Controllers** mirror the above filenames under `controllers/`; **middleware** includes `middleware/auth.js` (JWT verification), `middleware/roles.js`, `middleware/classificationAuth.js` for sensitive document rules.
+
+**Workflow shape:** partly driven by `config/workflowTemplates.js` and related logic (not necessarily a user-authored template DSL in the UI).
 
 ---
 
-## How to keep this document useful
+## Authentication flow (technical)
 
-1. After a **meaningful release**, skim the **“What the application does today”** section and fix anything that is no longer true.  
-2. Move finished items out of **“Known gaps”** (or delete them).  
-3. Add one-line bullets for **new** gaps instead of long specs.
+1. `POST /api/auth/login` validates credentials and returns a JWT.  
+2. Client stores token (e.g. `localStorage`) and sends `Authorization: Bearer <token>` on API calls (`api.js` request interceptor).  
+3. Protected routes call `authenticateToken`; role-gated operations use role middleware.  
+4. On **401**, axios response interceptor clears stored credentials and navigates to `/login`.
+
+There is **no refresh-token rotation** or **httpOnly cookie** session in the stock design—treat as a known deployment consideration.
 
 ---
 
-## Related documentation
+## Data model (SQLite)
 
-| Document | Role |
-|----------|------|
-| [README.md](README.md) | Install, run, default accounts |
-| [CODEBASE.md](CODEBASE.md) | Where each folder and major file lives |
-| [backend/docs/](backend/docs/) | Testing, access control, sample users |
-| [samples/](samples/) | Sample data and seeding notes |
+Schema source of truth: `backend/src/config/schema.sql`. **Foreign keys** enabled in `database.js` (`PRAGMA foreign_keys = ON`).
+
+**Core tables:**
+
+- **`users`** — `role` ∈ `personnel` | `authority` | `admin`; profile fields (e.g. rank, unit).  
+- **`documents`** — File payload in **`file_data` BLOB** (not only filesystem); `status` ∈ `pending` | `in_progress` | `completed` | `rejected`; optional classification, priority, **`deadline`**, version counter, `current_stage_name`.  
+- **`workflow_stages`** — Ordered stages per document; `required_role`, `assigned_to`, `deadline`, `rejection_reason`, signed-upload flags.  
+- **`signatures`** — `signature_data` BLOB, `type` `canvas` | `upload`, links to `workflow_stage_id` + `user_id`.  
+- **`document_attachments`** — Additional BLOB files per document.  
+- **`document_versions`** — Versioned signed uploads per document/stage.  
+- **`notifications`** — Per-user rows with `is_read`, optional links to document/stage.  
+- **`document_history`** — Audit-style action log.  
+- **`workflow_comments`** — Stage-scoped comments.
+
+Indexes are declared for common filters (status, deadlines, FK lookups). Application code in `utils/dbHelper.js` and controllers executes parameterized SQL against the shared `db` handle.
+
+---
+
+## Frontend architecture
+
+- **Bootstrap:** `main.jsx` → `App.jsx` wraps `AuthProvider`, `ToastProvider`, `BrowserRouter`.  
+- **Routing:** Public `/`, `/login`, `/register`; authenticated routes wrap `ProtectedRoute` + `Layout`; `/admin` uses `requiredRole="admin"` (see `App.jsx`).  
+- **State:** Auth and toasts via React Context; server state fetched per view with `documentsAPI`, `authAPI`, etc.  
+- **Notifications UI:** `NotificationCenter.jsx` polls notification endpoints on an interval.  
+- **Constants:** `utils/constants.js` mirrors document/stage statuses and role strings for UI consistency.
+
+---
+
+## Cross-cutting behavior
+
+- **CORS:** Configured for local dev ports; production should narrow origins.  
+- **Errors:** Central Express error middleware returns JSON `{ error: message }`; HTTP 404 for unknown routes.  
+- **Testing:** `backend/scripts/testFunctionality.js` invoked by `npm run test` (smoke-level API checks—not a full Jest/pyramid).
+
+---
+
+## Implemented vs. outstanding (technical)
+
+**Roughly implemented end-to-end:** JWT auth + role checks, document upload/list/download with BLOB storage, workflow stages, signatures, attachments, document versions, notifications table + API + UI polling, dashboard aggregates, classification middleware hooks where used.
+
+**Thin or absent (typical backlog):**
+
+- Admin SPA beyond placeholder; user/org admin APIs if not extended.  
+- Outbound **email** (SMTP), WebSocket/SSE for live notifications.  
+- **OAuth2/OIDC**, MFA, password-reset tokens, email verification flows.  
+- **OpenAPI** spec, formal API versioning, **rate limiting**, structured security headers (CSP, HSTS).  
+- Comprehensive **FE unit / E2E** automation in CI.  
+- Rich **preview** pipelines (PDF.js, etc.) and server-side full-text search.  
+- Magic-byte file validation, antivirus integration, moving large BLOBs to object storage.
+
+---
+
+## Related references
+
+| Resource | Use |
+|----------|-----|
+| [CODEBASE.md](CODEBASE.md) | File-level map |
+| [backend/docs/ACCESS_CONTROL.md](backend/docs/ACCESS_CONTROL.md) | Permission behavior |
+| [backend/docs/TEST_GUIDE.md](backend/docs/TEST_GUIDE.md) | Running smoke tests |
+| [backend/src/config/schema.sql](backend/src/config/schema.sql) | Full DDL |
 
 ---
 
