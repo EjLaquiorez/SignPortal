@@ -11,7 +11,7 @@ Engineering-oriented snapshot of **stack**, **API surface**, **persistence model
 | API | **Node.js**, **Express** 4.x, `express.json` / `urlencoded` |
 | Persistence | **SQLite 3** via `sqlite3` driver; path from `DB_PATH` or default `backend/signingportal.db` |
 | Auth | **JWT** (`jsonwebtoken`), passwords hashed with **bcryptjs** |
-| File ingest | **Multer** (`utils/fileHandler.js`) for multipart uploads; binary body stored per feature (see below) |
+| File ingest | **Multer** (`utils/fileHandler.js`) with **`memoryStorage`** (buffers); controllers persist binaries to SQLite **BLOB** columns (not a primary filesystem store) |
 | SPA | **React**, **Vite**, **React Router**, **axios** (`services/api.js`) |
 | Client config | `VITE_API_URL` or default `http://localhost:5000/api` |
 
@@ -35,7 +35,7 @@ Engineering-oriented snapshot of **stack**, **API surface**, **persistence model
 
 **Controllers** mirror the above filenames under `controllers/`; **middleware** includes `middleware/auth.js` (JWT verification), `middleware/roles.js`, `middleware/classificationAuth.js` for sensitive document rules.
 
-**Workflow shape:** partly driven by `config/workflowTemplates.js` and related logic (not necessarily a user-authored template DSL in the UI).
+**Workflow shape:** partly driven by `config/workflowTemplates.js`; org/unit context may use `config/unitHierarchy.js` where applicable.
 
 ---
 
@@ -59,7 +59,7 @@ Schema source of truth: `backend/src/config/schema.sql`. **Foreign keys** enable
 - **`users`** — `role` ∈ `personnel` | `authority` | `admin`; profile fields (e.g. rank, unit).  
 - **`documents`** — File payload in **`file_data` BLOB** (not only filesystem); `status` ∈ `pending` | `in_progress` | `completed` | `rejected`; optional classification, priority, **`deadline`**, version counter, `current_stage_name`.  
 - **`workflow_stages`** — Ordered stages per document; `required_role`, `assigned_to`, `deadline`, `rejection_reason`, signed-upload flags.  
-- **`signatures`** — `signature_data` BLOB, `type` `canvas` | `upload`, links to `workflow_stage_id` + `user_id`.  
+- **`signatures`** — `signature_data` BLOB, `signature_type` ∈ `canvas` | `upload`, FK to `workflow_stage_id` + `user_id`.  
 - **`document_attachments`** — Additional BLOB files per document.  
 - **`document_versions`** — Versioned signed uploads per document/stage.  
 - **`notifications`** — Per-user rows with `is_read`, optional links to document/stage.  
@@ -82,9 +82,11 @@ Indexes are declared for common filters (status, deadlines, FK lookups). Applica
 
 ## Cross-cutting behavior
 
-- **CORS:** Configured for local dev ports; production should narrow origins.  
+- **CORS:** Any `http://localhost:*` origin, or comma-separated `CORS_ORIGIN`; if unset, defaults include `http://localhost:5173` and `5174` (Vite). Tighten for production.  
+- **Environment:** Typical backend vars: `PORT`, `JWT_SECRET`, `DB_PATH`, optional `CORS_ORIGIN` ([README.md](README.md)). Upload cap is set on Multer in `fileHandler.js` (currently 50MB) unless you connect it to env.  
 - **Errors:** Central Express error middleware returns JSON `{ error: message }`; HTTP 404 for unknown routes.  
-- **Testing:** `backend/scripts/testFunctionality.js` invoked by `npm run test` (smoke-level API checks—not a full Jest/pyramid).
+- **Testing:** `backend/scripts/testFunctionality.js` via `npm run test` — smoke-level API checks, not a full test pyramid.  
+- **Schema apply:** `npm run init-db` → `config/initDatabase.js` + `schema.sql`.
 
 ---
 
@@ -112,7 +114,8 @@ Indexes are declared for common filters (status, deadlines, FK lookups). Applica
 | [backend/docs/ACCESS_CONTROL.md](backend/docs/ACCESS_CONTROL.md) | Permission behavior |
 | [backend/docs/TEST_GUIDE.md](backend/docs/TEST_GUIDE.md) | Running smoke tests |
 | [backend/src/config/schema.sql](backend/src/config/schema.sql) | Full DDL |
+| [samples/](samples/) | Seed data and usage notes |
 
 ---
 
-*Last updated: 2026-03-23*
+*Last updated: 2026-03-28*
