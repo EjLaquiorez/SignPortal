@@ -1,6 +1,36 @@
 # SignPortal — Technical capability & architecture notes
 
-Engineering-oriented snapshot of **stack**, **API surface**, **persistence model**, and **implementation gaps**. For directory-level file index see [CODEBASE.md](CODEBASE.md); for operator setup see [README.md](README.md).
+Engineering snapshot: **stack**, **API**, **SQLite model**, **auth**, **gaps**. File index: [CODEBASE.md](CODEBASE.md). Setup: [README.md](README.md).
+
+---
+
+## Contents
+
+1. [Local development commands](#local-development-commands)  
+2. [Stack](#stack)  
+3. [Backend layout](#backend-layout)  
+4. [Authentication flow](#authentication-flow-technical)  
+5. [Data model (SQLite)](#data-model-sqlite)  
+6. [Frontend architecture](#frontend-delivery)  
+7. [Cross-cutting behavior](#cross-cutting-behavior)  
+8. [Implemented vs. outstanding](#implemented-vs-outstanding-technical)  
+9. [Related references](#related-references)  
+
+---
+
+## Local development commands
+
+Typical **two-terminal** flow (no project `Makefile`; use **npm** from each package).
+
+| Step | Where | Command |
+|------|--------|---------|
+| Install API deps | `backend/` | `npm install` |
+| Create DB + schema | `backend/` | `npm run init-db` |
+| Run API | `backend/` | `npm run dev` → `http://localhost:5000` (default `PORT`) |
+| Smoke tests | `backend/` | `npm run test` |
+| Install UI deps | `frontend/` | `npm install` |
+| Run SPA | `frontend/` | `npm run dev` → Vite (e.g. `5173`); set `VITE_API_URL` if API is not default |
+| Stop dev servers (Windows / root script) | repo root | `npm run stop` (see [README.md](README.md)) |
 
 ---
 
@@ -21,88 +51,80 @@ Engineering-oriented snapshot of **stack**, **API surface**, **persistence model
 
 **Entry:** `backend/src/server.js` — CORS (localhost + optional `CORS_ORIGIN`), mounts routers, global error handler, `GET /api/health`.
 
-**Routers** (all prefixed by mount path):
+**Routers** (mount paths):
 
 | Mount | Module | Responsibility |
 |--------|--------|----------------|
 | `/api/auth` | `routes/auth.js` | Register, login, `GET /me` |
-| `/api/documents` | `routes/documents.js` | CRUD-ish document lifecycle, upload, list, download |
+| `/api/documents` | `routes/documents.js` | Document lifecycle, upload, list, download |
 | `/api/documents` | `routes/documentVersions.js` | `/:id/versions` signed version upload/list/download |
 | `/api/workflow` | `routes/workflow.js` | Stage progression, approvals |
 | `/api/signatures` | `routes/signatures.js` | Signature records tied to stages |
-| `/api` | `routes/attachments.js` | `POST/GET /documents/:id/attachments`, `GET/DELETE /attachments/...` |
-| `/api/notifications` | `routes/notifications.js` | In-app notifications CRUD/read state |
+| `/api` | `routes/attachments.js` | `POST/GET …/documents/:id/attachments`, `GET/DELETE …/attachments/…` |
+| `/api/notifications` | `routes/notifications.js` | In-app notifications |
 
-**Controllers** mirror the above filenames under `controllers/`; **middleware** includes `middleware/auth.js` (JWT verification), `middleware/roles.js`, `middleware/classificationAuth.js` for sensitive document rules.
+**Controllers** under `controllers/`; **middleware:** `auth.js`, `roles.js`, `classificationAuth.js`.
 
-**Workflow shape:** partly driven by `config/workflowTemplates.js`; org/unit context may use `config/unitHierarchy.js` where applicable.
+**Workflow:** `config/workflowTemplates.js`; optional org context via `config/unitHierarchy.js`.
 
 ---
 
 ## Authentication flow (technical)
 
-1. `POST /api/auth/login` validates credentials and returns a JWT.  
-2. Client stores token (e.g. `localStorage`) and sends `Authorization: Bearer <token>` on API calls (`api.js` request interceptor).  
-3. Protected routes call `authenticateToken`; role-gated operations use role middleware.  
-4. On **401**, axios response interceptor clears stored credentials and navigates to `/login`.
+1. `POST /api/auth/login` → JWT in response body.  
+2. Client stores token (e.g. `localStorage`); `api.js` sends `Authorization: Bearer <token>`.  
+3. Protected routers use `authenticateToken`; role checks via `roles` middleware where applied.  
+4. `401` response → interceptor clears storage and sends user to `/login`.
 
-There is **no refresh-token rotation** or **httpOnly cookie** session in the stock design—treat as a known deployment consideration.
+**Not in repo:** refresh tokens, httpOnly cookie sessions — plan explicitly if you deploy beyond local dev.
 
 ---
 
 ## Data model (SQLite)
 
-Schema source of truth: `backend/src/config/schema.sql`. **Foreign keys** enabled in `database.js` (`PRAGMA foreign_keys = ON`).
+**DDL:** `backend/src/config/schema.sql`. **FKs:** `PRAGMA foreign_keys = ON` in `database.js`.
 
-**Core tables:**
+| Table | Role |
+|-------|------|
+| `users` | Accounts; `role` ∈ `personnel` \| `authority` \| `admin` |
+| `documents` | Primary file in `file_data` BLOB; `status`, classification, priority, `deadline`, version fields |
+| `workflow_stages` | Ordered stages; `assigned_to`, `deadline`, `rejection_reason`, signed-upload flags |
+| `signatures` | `signature_data` BLOB; `signature_type` ∈ `canvas` \| `upload` |
+| `document_attachments` | Extra BLOB files per document |
+| `document_versions` | Versioned signed uploads |
+| `notifications` | Per-user; `is_read`; links to document/stage |
+| `document_history` | Action audit rows |
+| `workflow_comments` | Comments per stage |
 
-- **`users`** — `role` ∈ `personnel` | `authority` | `admin`; profile fields (e.g. rank, unit).  
-- **`documents`** — File payload in **`file_data` BLOB** (not only filesystem); `status` ∈ `pending` | `in_progress` | `completed` | `rejected`; optional classification, priority, **`deadline`**, version counter, `current_stage_name`.  
-- **`workflow_stages`** — Ordered stages per document; `required_role`, `assigned_to`, `deadline`, `rejection_reason`, signed-upload flags.  
-- **`signatures`** — `signature_data` BLOB, `signature_type` ∈ `canvas` | `upload`, FK to `workflow_stage_id` + `user_id`.  
-- **`document_attachments`** — Additional BLOB files per document.  
-- **`document_versions`** — Versioned signed uploads per document/stage.  
-- **`notifications`** — Per-user rows with `is_read`, optional links to document/stage.  
-- **`document_history`** — Audit-style action log.  
-- **`workflow_comments`** — Stage-scoped comments.
-
-Indexes are declared for common filters (status, deadlines, FK lookups). Application code in `utils/dbHelper.js` and controllers executes parameterized SQL against the shared `db` handle.
+**Access:** parameterized SQL from `utils/dbHelper.js` and controllers against the shared `db` export.
 
 ---
 
-## Frontend architecture
+## Frontend delivery
 
-- **Bootstrap:** `main.jsx` → `App.jsx` wraps `AuthProvider`, `ToastProvider`, `BrowserRouter`.  
-- **Routing:** Public `/`, `/login`, `/register`; authenticated routes wrap `ProtectedRoute` + `Layout`; `/admin` uses `requiredRole="admin"` (see `App.jsx`).  
-- **State:** Auth and toasts via React Context; server state fetched per view with `documentsAPI`, `authAPI`, etc.  
-- **Notifications UI:** `NotificationCenter.jsx` polls notification endpoints on an interval.  
-- **Constants:** `utils/constants.js` mirrors document/stage statuses and role strings for UI consistency.
+- **Bootstrap:** `main.jsx` → `App.jsx` → `AuthProvider`, `ToastProvider`, `BrowserRouter`.  
+- **Routes:** Public `/`, `/login`, `/register`; authenticated routes use `ProtectedRoute` + `Layout`; `/admin` uses `requiredRole="admin"`.  
+- **Data:** Context for auth/toasts; view-level fetches via `authAPI`, `documentsAPI`, workflow/signature/notification helpers.  
+- **Notifications:** `NotificationCenter.jsx` polls the notifications API.  
+- **Shared constants:** `utils/constants.js` (roles, document/stage status strings).
 
 ---
 
 ## Cross-cutting behavior
 
-- **CORS:** Any `http://localhost:*` origin, or comma-separated `CORS_ORIGIN`; if unset, defaults include `http://localhost:5173` and `5174` (Vite). Tighten for production.  
-- **Environment:** Typical backend vars: `PORT`, `JWT_SECRET`, `DB_PATH`, optional `CORS_ORIGIN` ([README.md](README.md)). Upload cap is set on Multer in `fileHandler.js` (currently 50MB) unless you connect it to env.  
-- **Errors:** Central Express error middleware returns JSON `{ error: message }`; HTTP 404 for unknown routes.  
-- **Testing:** `backend/scripts/testFunctionality.js` via `npm run test` — smoke-level API checks, not a full test pyramid.  
-- **Schema apply:** `npm run init-db` → `config/initDatabase.js` + `schema.sql`.
+- **CORS:** `http://localhost:*`, or `CORS_ORIGIN` (comma-separated); default list includes Vite `5173` / `5174`. Restrict in production.  
+- **Environment:** `PORT`, `JWT_SECRET`, `DB_PATH`, optional `CORS_ORIGIN` ([README.md](README.md)). Multer limit in `fileHandler.js` (e.g. 50MB).  
+- **Errors:** JSON `{ error: message }`; 404 JSON for unknown routes.  
+- **Tests:** `npm run test` → `scripts/testFunctionality.js` (API smoke, not full CI pyramid).  
+- **DB init:** `npm run init-db` → `config/initDatabase.js` applies `schema.sql`.
 
 ---
 
 ## Implemented vs. outstanding (technical)
 
-**Roughly implemented end-to-end:** JWT auth + role checks, document upload/list/download with BLOB storage, workflow stages, signatures, attachments, document versions, notifications table + API + UI polling, dashboard aggregates, classification middleware hooks where used.
+**In place:** JWT + role checks; documents CRUD/upload with BLOB storage; workflows; signatures; attachments; document versions; notifications API + UI polling; dashboard; classification middleware where wired.
 
-**Thin or absent (typical backlog):**
-
-- Admin SPA beyond placeholder; user/org admin APIs if not extended.  
-- Outbound **email** (SMTP), WebSocket/SSE for live notifications.  
-- **OAuth2/OIDC**, MFA, password-reset tokens, email verification flows.  
-- **OpenAPI** spec, formal API versioning, **rate limiting**, structured security headers (CSP, HSTS).  
-- Comprehensive **FE unit / E2E** automation in CI.  
-- Rich **preview** pipelines (PDF.js, etc.) and server-side full-text search.  
-- Magic-byte file validation, antivirus integration, moving large BLOBs to object storage.
+**Common gaps:** Real admin UI/API surface; SMTP/email and WebSocket notifications; OAuth/MFA/password-reset flows; OpenAPI; rate limits + security headers; FE unit/E2E; PDF preview + server search; magic-byte AV scan; external object storage for large binaries.
 
 ---
 
@@ -110,11 +132,11 @@ Indexes are declared for common filters (status, deadlines, FK lookups). Applica
 
 | Resource | Use |
 |----------|-----|
-| [CODEBASE.md](CODEBASE.md) | File-level map |
-| [backend/docs/ACCESS_CONTROL.md](backend/docs/ACCESS_CONTROL.md) | Permission behavior |
-| [backend/docs/TEST_GUIDE.md](backend/docs/TEST_GUIDE.md) | Running smoke tests |
-| [backend/src/config/schema.sql](backend/src/config/schema.sql) | Full DDL |
-| [samples/](samples/) | Seed data and usage notes |
+| [CODEBASE.md](CODEBASE.md) | Per-folder file map |
+| [backend/docs/ACCESS_CONTROL.md](backend/docs/ACCESS_CONTROL.md) | Permissions |
+| [backend/docs/TEST_GUIDE.md](backend/docs/TEST_GUIDE.md) | Smoke tests |
+| [backend/src/config/schema.sql](backend/src/config/schema.sql) | DDL |
+| [samples/](samples/) | Seed / sample data |
 
 ---
 
