@@ -1,143 +1,195 @@
-# SignPortal — Technical capability & architecture notes
+# SignPortal — Educational architecture guide
 
-Engineering snapshot: **stack**, **API**, **SQLite model**, **auth**, **gaps**. File index: [CODEBASE.md](CODEBASE.md). Setup: [README.md](README.md).
+This document teaches **how SignPortal is put together** so you can read the code with context: what “full-stack” means here, how a browser call reaches the database, and **why** common patterns (JWT, REST, SQLite BLOBs) appear in this project.
+
+**Use it when:** learning the codebase, preparing a technical talk, or debugging (“where should this check live—API, DB, or UI?”).  
+**For:** a file-by-file map → [CODEBASE.md](CODEBASE.md). For install steps → [README.md](README.md).
+
+---
+
+## What you should be able to do after reading this
+
+- Explain the **path of one user action** from React → HTTP → Express → SQL → back to the UI.  
+- Say why the app uses a **SPA + REST API** instead of server-rendered pages only.  
+- Name the main **tables** and how **documents**, **workflow stages**, and **signatures** relate.  
+- List **conscious tradeoffs** (e.g. JWT in localStorage, files in SQLite) and what you’d change for production.
+
+---
+
+## Big picture: how the system is organized
+
+**SignPortal** is a **single-page application (SPA)** in the browser (React) that talks to a **separate HTTP API** (Express on Node). The API owns **business rules**, **authentication**, and **persistence**. The database is **SQLite**: one file on disk, good for learning and small deployments—**not** a separate database server process.
+
+**Why split frontend and backend?** You can change the UI without rewriting logic; you can test or document the API independently; multiple clients (web, future mobile) could share the same API.
+
+**Mental model:** the browser is a **client**; every meaningful operation becomes an **HTTP request** (often `GET`/`POST`/`DELETE`) to `/api/...`, with JSON or multipart bodies. The server **never** trusts the client for “is this user an admin?”—it **re-derives identity** from the JWT on each protected request.
+
+---
+
+## End-to-end: one request’s journey
+
+1. User clicks something in React (e.g. open document list).  
+2. `services/api.js` (axios) attaches `Authorization: Bearer <token>` if the user logged in earlier.  
+3. Express matches the URL to a **router** (`routes/documents.js`, etc.).  
+4. **Middleware** runs first: `authenticateToken` verifies the JWT; role middleware may block non-admins.  
+5. A **controller** runs SQL (via `sqlite3`) and may read/write **BLOBs** for files and signatures.  
+6. The handler returns **JSON** (or binary for downloads).  
+7. React updates state; the user sees new data or an error (toasts, redirects on `401`).
+
+Tracing one real feature this way is the fastest way to learn the repo.
 
 ---
 
 ## Contents
 
-1. [Local development commands](#local-development-commands)  
-2. [Stack](#stack)  
-3. [Backend layout](#backend-layout)  
-4. [Authentication flow](#authentication-flow-technical)  
-5. [Data model (SQLite)](#data-model-sqlite)  
-6. [Frontend architecture](#frontend-delivery)  
-7. [Cross-cutting behavior](#cross-cutting-behavior)  
-8. [Implemented vs. outstanding](#implemented-vs-outstanding-technical)  
-9. [Related references](#related-references)  
+1. [Local development (hands-on)](#local-development-hands-on)  
+2. [The stack, explained](#the-stack-explained)  
+3. [Backend: routes and responsibilities](#backend-routes-and-responsibilities)  
+4. [Authentication: JWT in plain terms](#authentication-jwt-in-plain-terms)  
+5. [Database design for a signing workflow](#database-design-for-a-signing-workflow)  
+6. [Frontend: how React fits in](#frontend-how-react-fits-in)  
+7. [Cross-cutting topics (CORS, env, tests)](#cross-cutting-topics-cors-env-tests)  
+8. [What exists vs what advanced apps add](#what-exists-vs-what-advanced-apps-add)  
+9. [Mini glossary](#mini-glossary)  
+10. [Further reading](#further-reading)  
 
 ---
 
-## Local development commands
+## Local development (hands-on)
 
-Typical **two-terminal** flow (no project `Makefile`; use **npm** from each package).
+You usually run **two processes**: API and UI. There is no root `Makefile`; **`npm`** is the interface.
 
-| Step | Where | Command |
-|------|--------|---------|
-| Install API deps | `backend/` | `npm install` |
-| Create DB + schema | `backend/` | `npm run init-db` |
-| Run API | `backend/` | `npm run dev` → `http://localhost:5000` (default `PORT`) |
-| Smoke tests | `backend/` | `npm run test` |
-| Install UI deps | `frontend/` | `npm install` |
-| Run SPA | `frontend/` | `npm run dev` → Vite (e.g. `5173`); set `VITE_API_URL` if API is not default |
-| Stop dev servers (Windows / root script) | repo root | `npm run stop` (see [README.md](README.md)) |
+| Step | Directory | Command | Idea |
+|------|------------|---------|------|
+| Install server deps | `backend/` | `npm install` | Pull Express, sqlite3, etc. |
+| Create tables | `backend/` | `npm run init-db` | Run DDL in `schema.sql` |
+| Run API | `backend/` | `npm run dev` | Listen on `PORT` (default 5000) |
+| Smoke test API | `backend/` | `npm run test` | Scripted HTTP checks, not full test suite |
+| Install UI deps | `frontend/` | `npm install` | Pull React, Vite, etc. |
+| Run UI | `frontend/` | `npm run dev` | Vite dev server; often port 5173 |
+| Stop (Windows helper) | repo root | `npm run stop` | See [README.md](README.md) |
 
----
-
-## Stack
-
-| Layer | Technology |
-|--------|------------|
-| API | **Node.js**, **Express** 4.x, `express.json` / `urlencoded` |
-| Persistence | **SQLite 3** via `sqlite3` driver; path from `DB_PATH` or default `backend/signingportal.db` |
-| Auth | **JWT** (`jsonwebtoken`), passwords hashed with **bcryptjs** |
-| File ingest | **Multer** (`utils/fileHandler.js`) with **`memoryStorage`** (buffers); controllers persist binaries to SQLite **BLOB** columns (not a primary filesystem store) |
-| SPA | **React**, **Vite**, **React Router**, **axios** (`services/api.js`) |
-| Client config | `VITE_API_URL` or default `http://localhost:5000/api` |
+`VITE_API_URL` points the UI at your API if it is not `http://localhost:5000/api`.
 
 ---
 
-## Backend layout
+## The stack, explained
 
-**Entry:** `backend/src/server.js` — CORS (localhost + optional `CORS_ORIGIN`), mounts routers, global error handler, `GET /api/health`.
-
-**Routers** (mount paths):
-
-| Mount | Module | Responsibility |
-|--------|--------|----------------|
-| `/api/auth` | `routes/auth.js` | Register, login, `GET /me` |
-| `/api/documents` | `routes/documents.js` | Document lifecycle, upload, list, download |
-| `/api/documents` | `routes/documentVersions.js` | `/:id/versions` signed version upload/list/download |
-| `/api/workflow` | `routes/workflow.js` | Stage progression, approvals |
-| `/api/signatures` | `routes/signatures.js` | Signature records tied to stages |
-| `/api` | `routes/attachments.js` | `POST/GET …/documents/:id/attachments`, `GET/DELETE …/attachments/…` |
-| `/api/notifications` | `routes/notifications.js` | In-app notifications |
-
-**Controllers** under `controllers/`; **middleware:** `auth.js`, `roles.js`, `classificationAuth.js`.
-
-**Workflow:** `config/workflowTemplates.js`; optional org context via `config/unitHierarchy.js`.
+| Piece | Technology | Teaching note |
+|--------|------------|----------------|
+| HTTP API | **Node + Express** | **REST-shaped** routes: resources under `/api/...`, JSON responses—easy to document and test with curl or Postman. |
+| Database | **SQLite + `sqlite3` package** | **Embedded** DB: no install step for Postgres. Tradeoff: one-writer limits; fine for learning/small teams. |
+| Passwords | **bcryptjs** | Passwords are **hashed**, not stored plain—standard practice. |
+| Login ticket | **JWT** | Server signs a compact token; client sends it on each request. **Stateless** for the server, but you must handle **expiry** and **where** the token lives (here: browser storage). |
+| Uploads | **Multer (memory)** | Files land in RAM briefly, then code writes **BLOB** columns. Simple deployment; large files scale better with disk/object storage later. |
+| Browser app | **React + Vite + React Router** | **Client-side routing**—URLs change without full page reloads; data comes from fetch/axios. |
 
 ---
 
-## Authentication flow (technical)
+## Backend: routes and responsibilities
 
-1. `POST /api/auth/login` → JWT in response body.  
-2. Client stores token (e.g. `localStorage`); `api.js` sends `Authorization: Bearer <token>`.  
-3. Protected routers use `authenticateToken`; role checks via `roles` middleware where applied.  
-4. `401` response → interceptor clears storage and sends user to `/login`.
+**Entry file:** `server.js` wires **CORS**, JSON body parsing, **route prefixes**, and a single **error handler**.
 
-**Not in repo:** refresh tokens, httpOnly cookie sessions — plan explicitly if you deploy beyond local dev.
+Routers group related URLs—think “namespaces”:
 
----
+| Mount | Module | What learners should notice |
+|--------|--------|----------------------------|
+| `/api/auth` | `routes/auth.js` | Public register/login; `/me` needs a token. |
+| `/api/documents` | `routes/documents.js` | Core document lifecycle. |
+| `/api/documents` | `routes/documentVersions.js` | **Same prefix**, different file—versions hang off document `:id`. |
+| `/api/workflow` | `routes/workflow.js` | Approvals and stage movement. |
+| `/api/signatures` | `routes/signatures.js` | Signature rows tied to **workflow stages**. |
+| `/api` | `routes/attachments.js` | Attachments and download paths under `/documents/...` and `/attachments/...`. |
+| `/api/notifications` | `routes/notifications.js` | In-app alerts per user. |
 
-## Data model (SQLite)
+**Middleware** sits **before** controllers: `authenticateToken` answers “who is this?”; `roles` answers “are they allowed?”. **`classificationAuth`** encodes stricter rules for sensitive documents—an example of **layered** security.
 
-**DDL:** `backend/src/config/schema.sql`. **FKs:** `PRAGMA foreign_keys = ON` in `database.js`.
-
-| Table | Role |
-|-------|------|
-| `users` | Accounts; `role` ∈ `personnel` \| `authority` \| `admin` |
-| `documents` | Primary file in `file_data` BLOB; `status`, classification, priority, `deadline`, version fields |
-| `workflow_stages` | Ordered stages; `assigned_to`, `deadline`, `rejection_reason`, signed-upload flags |
-| `signatures` | `signature_data` BLOB; `signature_type` ∈ `canvas` \| `upload` |
-| `document_attachments` | Extra BLOB files per document |
-| `document_versions` | Versioned signed uploads |
-| `notifications` | Per-user; `is_read`; links to document/stage |
-| `document_history` | Action audit rows |
-| `workflow_comments` | Comments per stage |
-
-**Access:** parameterized SQL from `utils/dbHelper.js` and controllers against the shared `db` export.
+Workflow shape is partly **data-driven** from `config/workflowTemplates.js`; `config/unitHierarchy.js` supports org-style metadata where used.
 
 ---
 
-## Frontend delivery
+## Authentication: JWT in plain terms
 
-- **Bootstrap:** `main.jsx` → `App.jsx` → `AuthProvider`, `ToastProvider`, `BrowserRouter`.  
-- **Routes:** Public `/`, `/login`, `/register`; authenticated routes use `ProtectedRoute` + `Layout`; `/admin` uses `requiredRole="admin"`.  
-- **Data:** Context for auth/toasts; view-level fetches via `authAPI`, `documentsAPI`, workflow/signature/notification helpers.  
-- **Notifications:** `NotificationCenter.jsx` polls the notifications API.  
-- **Shared constants:** `utils/constants.js` (roles, document/stage status strings).
+1. **Login:** client sends email/password; server checks hash; responds with a **JWT string**.  
+2. **Later requests:** client sends `Authorization: Bearer <JWT>`.  
+3. **Server:** verifies signature and reads claims (e.g. user id); loads user/role if needed.  
+4. **401:** axios interceptor clears storage and sends user to login—**the UI and API agree** that the session is dead.
 
----
-
-## Cross-cutting behavior
-
-- **CORS:** `http://localhost:*`, or `CORS_ORIGIN` (comma-separated); default list includes Vite `5173` / `5174`. Restrict in production.  
-- **Environment:** `PORT`, `JWT_SECRET`, `DB_PATH`, optional `CORS_ORIGIN` ([README.md](README.md)). Multer limit in `fileHandler.js` (e.g. 50MB).  
-- **Errors:** JSON `{ error: message }`; 404 JSON for unknown routes.  
-- **Tests:** `npm run test` → `scripts/testFunctionality.js` (API smoke, not full CI pyramid).  
-- **DB init:** `npm run init-db` → `config/initDatabase.js` applies `schema.sql`.
+**Teaching point:** JWTs are **not** a silver bullet. If stored in `localStorage`, **XSS** in your frontend can exfiltrate them. Production systems often prefer **httpOnly cookies**, **short-lived** access tokens, **refresh** tokens, and **CSRF** defenses—topics worth a security course, not this checklist alone.
 
 ---
 
-## Implemented vs. outstanding (technical)
+## Database design for a signing workflow
 
-**In place:** JWT + role checks; documents CRUD/upload with BLOB storage; workflows; signatures; attachments; document versions; notifications API + UI polling; dashboard; classification middleware where wired.
+**Schema file:** `backend/src/config/schema.sql`. **Foreign keys** are enforced (`PRAGMA foreign_keys = ON` in `database.js`) so orphan stages or signatures are harder to create accidentally.
 
-**Common gaps:** Real admin UI/API surface; SMTP/email and WebSocket notifications; OAuth/MFA/password-reset flows; OpenAPI; rate limits + security headers; FE unit/E2E; PDF preview + server search; magic-byte AV scan; external object storage for large binaries.
+| Table | Conceptual role |
+|-------|----------------|
+| `users` | Who can act; **`role`** drives permissions in code. |
+| `documents` | The “case” row: main binary in **`file_data`**, status, deadline, metadata. |
+| `workflow_stages` | Ordered steps; who is assigned; rejection reason; optional per-stage deadline. |
+| `signatures` | Evidence of signing, linked to a **stage** and **user**. |
+| `document_attachments` | Extra evidence files. |
+| `document_versions` | New signed file blobs as the workflow progresses. |
+| `notifications` | Work queue signals in the DB; UI polls or could upgrade to push. |
+| `document_history` | **Audit** trail of actions. |
+| `workflow_comments` | Discussion attached to a stage. |
+
+**Exercise:** draw a diagram: `documents` 1—* `workflow_stages` 1—* `signatures`. That’s the mental core of the product.
+
+**Queries:** use **parameterized** SQL (placeholders)—see controllers and `dbHelper.js`—to reduce **SQL injection** risk.
 
 ---
 
-## Related references
+## Frontend: how React fits in
 
-| Resource | Use |
-|----------|-----|
-| [CODEBASE.md](CODEBASE.md) | Per-folder file map |
-| [backend/docs/ACCESS_CONTROL.md](backend/docs/ACCESS_CONTROL.md) | Permissions |
-| [backend/docs/TEST_GUIDE.md](backend/docs/TEST_GUIDE.md) | Smoke tests |
-| [backend/src/config/schema.sql](backend/src/config/schema.sql) | DDL |
-| [samples/](samples/) | Seed / sample data |
+- **`App.jsx`** declares **routes** and wraps the tree in **Auth** + **Toast** providers so any child can read “who am I?” or show feedback.  
+- **`ProtectedRoute`** implements “must login” and optional **`requiredRole="admin"`**—**parallel** to server checks, not a substitute for them.  
+- **Page components** fetch data when they mount or when users act; **`api.js`** centralizes base URL and headers.  
+- **Notifications** use **polling** (timer)—simple to reason about; **WebSockets** are the usual upgrade for “instant” updates.
 
 ---
 
-*Last updated: 2026-03-28*
+## Cross-cutting topics (CORS, env, tests)
+
+- **CORS:** browsers block random origins from calling your API unless the server **allows** them. Here, localhost patterns and `CORS_ORIGIN` exist for dev; production needs an **explicit allowlist** of real front-end URLs.  
+- **Environment variables:** `PORT`, `JWT_SECRET`, `DB_PATH`, `CORS_ORIGIN`—**secrets** (`JWT_SECRET`) must differ per environment.  
+- **Tests:** `npm run test` runs **smoke** HTTP checks—good for regression of happy paths; **unit** and **E2E** tests are the next learning step for larger teams.  
+- **Init:** `npm run init-db` applies `schema.sql`—always understand migrations before running on shared data.
+
+---
+
+## What exists vs what advanced apps add
+
+**You can study today:** full document lifecycle with roles, workflows, signatures, versions, attachments, notifications, audit table concepts.
+
+**Typical “next semester” topics:** admin CRUD UIs, **email**, OAuth/MFA, **rate limiting**, formal **OpenAPI** docs, **object storage** for huge files, **full-text search**, automated **E2E** tests, hardened cookie-based sessions.
+
+---
+
+## Mini glossary
+
+| Term | Quick meaning |
+|------|----------------|
+| **SPA** | One HTML shell; JavaScript swaps views and calls APIs. |
+| **REST** | Resource-style HTTP: nouns in URLs, verbs in methods, state in JSON. |
+| **JWT** | Signed JSON payload proving “issued by our server until expiry.” |
+| **Middleware** | Express functions that run **before** your final route handler. |
+| **BLOB** | Binary large object column—stores file bytes inside SQLite. |
+| **Foreign key** | DB rule: this row’s `document_id` must point to a real document. |
+
+---
+
+## Further reading
+
+| Resource | Why open it |
+|-----------|-------------|
+| [CODEBASE.md](CODEBASE.md) | Maps folders to files. |
+| [backend/docs/ACCESS_CONTROL.md](backend/docs/ACCESS_CONTROL.md) | How roles affect routes. |
+| [backend/docs/TEST_GUIDE.md](backend/docs/TEST_GUIDE.md) | Running smoke tests. |
+| [backend/src/config/schema.sql](backend/src/config/schema.sql) | Read the DDL like documentation. |
+| [samples/](samples/) | Example data for experiments. |
+
+---
+
+*Last updated: 2026-04-02*
