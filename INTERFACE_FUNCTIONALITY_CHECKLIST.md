@@ -23,6 +23,8 @@ This guide tells you **what to do first**, **what the words mean**, and **how th
 
 **Why:** Running the project once makes every later sentence easier to understand.
 
+**Project root:** the folder that contains both `backend/` and `frontend/` (often named `SignPortal`). Use that as your starting point for `cd`.
+
 1. Open two terminal windows.  
 2. In the **first** terminal:
    - `cd backend`
@@ -37,7 +39,19 @@ This guide tells you **what to do first**, **what the words mean**, and **how th
    - Open the URL Vite prints (often **http://localhost:5173**).
 4. Register a user, log in, upload a sample file if you can.
 
+After **`npm run init-db`**, a default **admin** account may exist (see [README.md](README.md) for email/password—change it after first login).
+
+**Check the API:** with the backend running, open **http://localhost:5000/api/health** in the browser. You should see a small JSON “ok” response. If that fails, fix the backend before debugging the React app.
+
 **Try this:** In the browser, open DevTools → **Network**. Click something that loads documents. Find a request whose name starts with `documents` or `auth`. You are watching the **frontend talk to the backend**.
+
+**If something fails:**
+
+| Symptom | What to try |
+|---------|-------------|
+| “Port 5000 already in use” | Stop the old server ([README.md](README.md) `npm run stop`) or change `PORT` in `backend/.env`. |
+| Login always fails after clone | Run **`npm run init-db`** once in `backend/`. |
+| React shows errors but Network tab shows no API calls | Confirm `VITE_API_URL` matches your API (see `frontend/src/utils/constants.js`). |
 
 **Stop servers:** from the project root, see [README.md](README.md) (`npm run stop` on Windows).
 
@@ -173,7 +187,8 @@ You already have: login and roles, file upload, multi-step workflow, signatures,
 | [backend/docs/ACCESS_CONTROL.md](backend/docs/ACCESS_CONTROL.md) | Who can do what. |
 | [backend/docs/TEST_GUIDE.md](backend/docs/TEST_GUIDE.md) | How to run backend tests. |
 | [samples/](samples/) | Sample data for practice. |
+| [backend/src/config/schema.sql](backend/src/config/schema.sql) | Exact table and column definitions. |
 
 ---
 
-*Last updated: 2026-04-02*
+*Last updated: 2026-04-05*
