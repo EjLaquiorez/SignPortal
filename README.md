@@ -1,21 +1,49 @@
 # SigningPortal
 
-Web app for uploading documents, capturing signatures, and moving them through an approval workflow (Personnel → Authority → completed).
+A small **web application** for uploading documents, capturing electronic signatures, and moving each file through an **approval workflow**: Personnel → Authority → completed.
+
+This README is written for **beginners** and **first-time contributors**. If you already know Node.js and full-stack apps, skip to [Run the project locally](#run-the-project-locally).
+
+*Last updated: 26 April 2026.*
 
 ---
 
-## What you need
+## What this project is (in plain terms)
 
-- **Node.js** 16 or newer  
-- **npm** (comes with Node.js)
+| Piece | Role |
+|--------|------|
+| **Frontend** | What you see in the browser: login, uploads, signing UI. Built with **React** and **Vite**. |
+| **Backend** | A server that stores data, handles logins, and serves the API. Built with **Node.js** and **Express**. |
+| **Database** | **SQLite** — one file on disk (no separate database program to install). |
 
-You do **not** need to install a database server. This project uses **SQLite** (a single file on disk).
+You run **two processes** on your computer when developing: the backend (API) and the frontend (web UI). They talk to each other over HTTP on your machine.
+
+---
+
+## What you need before you start
+
+- **Node.js** version **16 or newer** (includes **npm**, the package manager).
+- A **terminal** (Command Prompt, PowerShell, or Terminal on macOS/Linux).
+- **Git** (optional but typical) if you cloned this repository.
+
+### Check your versions
+
+In a terminal:
+
+```bash
+node -v
+npm -v
+```
+
+If `node` is not recognized, install Node from [https://nodejs.org](https://nodejs.org) (LTS is fine).
+
+You do **not** need to install MySQL, PostgreSQL, or any other database server. This project uses **SQLite** only.
 
 ---
 
 ## Run the project locally
 
-Do these steps **in order**. Use two terminal windows: one for the backend, one for the frontend.
+Follow these steps **in order**. Use **two terminal windows** (or tabs): one stays on the backend, one on the frontend.
 
 ### 1. Backend (API)
 
@@ -26,14 +54,19 @@ npm run init-db
 npm run dev
 ```
 
-- **`init-db`** creates the database and a default admin user (see below). Run it once, or again if you want a fresh database.
-- The API listens at **http://localhost:5000**
+What each step does:
 
-**Optional:** Create `backend/.env` if you want to override defaults (see [Handy commands](#handy-commands) for typical variables). Local development works without it.
+- **`npm install`** downloads the backend dependencies (first time and after dependency changes).
+- **`init-db`** creates the SQLite database file and a **default admin** account (see [Log in](#3-log-in)). Run once on a fresh clone, or again if you want to reset the database (you will lose existing local data unless you back up the DB file).
+- **`npm run dev`** starts the API with auto-restart on file changes (**nodemon**).
+
+The API listens at **http://localhost:5000**.
+
+**Optional:** Create `backend/.env` to override defaults. Local development usually works **without** it. See [Environment variables](#environment-variables-optional).
 
 ### 2. Frontend (browser UI)
 
-Open a **new** terminal:
+Open a **second** terminal:
 
 ```bash
 cd frontend
@@ -41,39 +74,51 @@ npm install
 npm run dev
 ```
 
-- The app opens at **http://localhost:5173** (Vite will print the exact URL).
+Vite prints a local URL (typically **http://localhost:5173**). Open that URL in your browser.
 
 ### 3. Log in
 
-After `init-db`, you can sign in as:
+After `init-db`, you can sign in with:
 
-| Field    | Value                    |
-|----------|--------------------------|
+| Field    | Value                     |
+|----------|---------------------------|
 | Email    | `admin@signingportal.com` |
-| Password | `admin123`               |
+| Password | `admin123`                |
 
-Change this password after the first login.
+**Change this password** after your first login in a real environment.
 
 ---
 
-## Using the app (short version)
+## Using the app (short tour)
 
-1. **Register or log in** with your role (Personnel, Authority, or Admin).
-2. **Personnel** uploads a document — a workflow is created automatically.
-3. **Sign** when it is your turn in the workflow.
+1. **Register or log in** with a role such as Personnel, Authority, or Admin (depending on how accounts are set up).
+2. **Personnel** uploads a document — a workflow is created for that file.
+3. Participants **sign** when it is their turn in the workflow.
 4. **Authority** reviews and approves when required.
 5. **Track** status and history on each document.
 
-Typical flow: upload → personnel signs → authority approves → document marked completed.
+Typical happy path: **upload → personnel signs → authority approves → document marked completed.**
+
+---
+
+## If something goes wrong (common issues)
+
+| Problem | What to try |
+|---------|-------------|
+| **Port 5000 or 5173 already in use** | Stop another app using that port, or use [Stop the servers](#stop-the-servers). On Windows you can also stop the backend from `backend` with `npm run stop`. |
+| **Cannot connect / blank errors in the browser** | Make sure the **backend** terminal is still running and shows no crash. The frontend expects the API at `localhost:5000` for typical local setup. |
+| **`npm` errors after pulling new code** | Run `npm install` again in both `backend` and `frontend`. |
+| **Database seems wrong or empty** | From `backend`, run `npm run init-db` again (this resets the default setup; see backend docs if you need to preserve data). |
 
 ---
 
 ## Stop the servers
 
-- **From the project root (recommended):**  
-  `npm run stop`
+- **From the project root (Windows, recommended with this repo):**  
+  `npm run stop`  
+  (Uses PowerShell to stop processes; see `stop-servers.ps1`.)
 
-- **Backend only (port 5000):** from `backend`, run `npm run stop`.
+- **Backend only (port 5000):** from the `backend` folder, run `npm run stop`.
 
 You can also run `stop-servers.ps1` or `stop-servers.bat` from the repo root on Windows.
 
@@ -88,7 +133,7 @@ npm run test
 
 ---
 
-## Sample data and docs
+## Learn more in this repository
 
 | Topic | Where |
 |--------|--------|
@@ -99,15 +144,25 @@ npm run test
 
 ---
 
-## Handy commands
+## Handy commands (quick reference)
 
-**Backend** (`backend/`): `npm run dev` · `npm run init-db` · `npm run test` · `npm run seed-users` · `npm run seed-documents` · `npm run reset-admin`
+**Backend** (`backend/`):
 
-**Frontend** (`frontend/`): `npm run dev` · `npm run build`
+`npm run dev` · `npm run init-db` · `npm run test` · `npm run seed-users` · `npm run seed-documents` · `npm run reset-admin` · `npm run stop`
 
-**Root:** `npm run stop`
+**Frontend** (`frontend/`):
 
-**Optional `backend/.env` keys** (defaults work for local dev):
+`npm run dev` · `npm run build` · `npm run preview` (preview production build locally)
+
+**Root:**
+
+`npm run stop`
+
+---
+
+## Environment variables (optional)
+
+Create `backend/.env` only if you need to change defaults. Local development works without it.
 
 ```env
 PORT=5000
@@ -119,9 +174,10 @@ MAX_FILE_SIZE=52428800
 
 ---
 
-## Security (local dev)
+## Security (especially beyond local dev)
 
-Change the default admin password after first login. For production, use a strong `JWT_SECRET`, tighten cookie/storage for tokens, and review [backend/docs/ACCESS_CONTROL.md](backend/docs/ACCESS_CONTROL.md).
+- Change the **default admin password** after first login.
+- For production, use a strong **`JWT_SECRET`**, harden how tokens and cookies are handled, and read [backend/docs/ACCESS_CONTROL.md](backend/docs/ACCESS_CONTROL.md).
 
 ---
 
@@ -129,7 +185,7 @@ Change the default admin password after first login. For production, use a stron
 
 ```
 SignPortal/
-├── backend/     Express API, SQLite, uploads
+├── backend/     Express API, SQLite, file uploads
 ├── frontend/    React + Vite UI
 ├── samples/     Sample documents and seeding notes
 └── README.md
