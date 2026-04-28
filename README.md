@@ -62,6 +62,8 @@ What each step does:
 
 The API listens at **http://localhost:5000**.
 
+**Quick check:** In a browser, open **http://localhost:5000/api/health**. You should see JSON with `"status": "ok"`.
+
 **Optional:** Create `backend/.env` to override defaults. Local development usually works **without** it. See [Environment variables](#environment-variables-optional).
 
 ### 2. Frontend (browser UI)
@@ -74,7 +76,9 @@ npm install
 npm run dev
 ```
 
-Vite prints a local URL (typically **http://localhost:5173**). Open that URL in your browser.
+Vite prints a local URL (typically **http://localhost:5173**; sometimes **5174** if 5173 is busy). Open that URL in your browser.
+
+The frontend calls the API using **`API_BASE_URL`** in [`frontend/src/utils/constants.js`](frontend/src/utils/constants.js) (or the **`VITE_API_URL`** env var if you set it). For normal local dev that resolves to `http://localhost:5000/api`.
 
 ### 3. Log in
 
@@ -105,22 +109,21 @@ Typical happy path: **upload → personnel signs → authority approves → docu
 
 | Problem | What to try |
 |---------|-------------|
-| **Port 5000 or 5173 already in use** | Stop another app using that port, or use [Stop the servers](#stop-the-servers). On Windows you can also stop the backend from `backend` with `npm run stop`. |
-| **Cannot connect / blank errors in the browser** | Make sure the **backend** terminal is still running and shows no crash. The frontend expects the API at `localhost:5000` for typical local setup. |
+| **Port 5000, 5173, or 5174 already in use** | Use [Stop the servers](#stop-the-servers). From `backend/`, `npm run stop` frees **5000** only; from the repo root on Windows, `npm run stop` or `stop-servers.bat` clear **5000**, **5173**, and **5174**. |
+| **Cannot connect / blank errors in the browser** | Keep the **backend** terminal running. Confirm **http://localhost:5000/api/health** works. |
+| **UI works but lists stay empty or login looks broken** | Ensure the API URL matches your backend (see [`frontend/src/utils/constants.js`](frontend/src/utils/constants.js) and `VITE_API_URL`). |
 | **`npm` errors after pulling new code** | Run `npm install` again in both `backend` and `frontend`. |
-| **Database seems wrong or empty** | From `backend`, run `npm run init-db` again (this resets the default setup; see backend docs if you need to preserve data). |
+| **Database seems wrong or empty** | From `backend`, run `npm run init-db` again (this resets the default setup; back up `signingportal.db` first if you need to keep data). |
 
 ---
 
 ## Stop the servers
 
-- **From the project root (Windows, recommended with this repo):**  
-  `npm run stop`  
-  (Uses PowerShell to stop processes; see `stop-servers.ps1`.)
+- **From the project root (Windows):** `npm run stop` — runs **`stop-servers.ps1`** and frees **5000**, **5173**, and **5174**.
 
-- **Backend only (port 5000):** from the `backend` folder, run `npm run stop`.
+- **Command Prompt (no PowerShell):** run **`stop-servers.bat`** from the repo root (same three ports). Use **`stop-servers.bat nopause`** from another script if you don’t want the “Press any key” prompt.
 
-You can also run `stop-servers.ps1` or `stop-servers.bat` from the repo root on Windows.
+- **Backend only (port 5000):** from the **`backend/`** folder, run **`npm run stop`**.
 
 ---
 
@@ -141,7 +144,9 @@ npm run test
 | **New to the codebase / full-stack basics** | [BEGINNERS_GUIDE.md](BEGINNERS_GUIDE.md) |
 | Manual UI checks (screens and flows) | [INTERFACE_FUNCTIONALITY_CHECKLIST.md](INTERFACE_FUNCTIONALITY_CHECKLIST.md) |
 | Sample files and seeding | [samples/README.md](samples/README.md) |
-| API, access control, test users | [backend/docs/](backend/docs/) |
+| Permissions and classified documents | [backend/docs/ACCESS_CONTROL.md](backend/docs/ACCESS_CONTROL.md) |
+| Backend tests (detail) | [backend/docs/TEST_GUIDE.md](backend/docs/TEST_GUIDE.md) |
+| Example accounts for manual testing | [backend/docs/SAMPLE_USERS.md](backend/docs/SAMPLE_USERS.md) |
 
 ---
 
@@ -149,7 +154,7 @@ npm run test
 
 **Backend** (`backend/`):
 
-`npm run dev` · `npm run init-db` · `npm run test` · `npm run seed-users` · `npm run seed-documents` · `npm run reset-admin` · `npm run stop`
+`npm run dev` · `npm run init-db` · `npm run test` · `npm run view-db` · `npm run seed-users` · `npm run seed-documents` · `npm run reset-admin` · `npm run stop`
 
 **Frontend** (`frontend/`):
 
@@ -186,14 +191,17 @@ MAX_FILE_SIZE=52428800
 
 ```
 SignPortal/
-├── backend/     Express API, SQLite, file uploads
-├── frontend/    React + Vite UI
-├── samples/     Sample documents and seeding notes
-└── README.md
+├── backend/              Express API, SQLite, uploads
+├── frontend/             React + Vite UI
+├── samples/              Sample data and seeding guides
+├── stop-servers.ps1      Windows: stop dev servers (used by root npm run stop)
+├── stop-servers.bat      Same ports via cmd; optional arg: nopause
+├── README.md · CODEBASE.md · BEGINNERS_GUIDE.md · …
+└── package.json          Root script: npm run stop
 ```
 
 ---
 
 ## License & contributing
 
-Add your license and contribution notes here if you publish the project.
+There is no **LICENSE** file in this repository yet; add one and contribution guidelines if you publish or open-source the project.

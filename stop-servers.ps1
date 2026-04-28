@@ -32,6 +32,10 @@ Stop-Port -Port 5000
 Write-Host "`nChecking frontend server (port 5173)..." -ForegroundColor Yellow
 Stop-Port -Port 5173
 
+# Alternate Vite port (e.g. when 5173 is busy)
+Write-Host "`nChecking frontend alternate port (5174)..." -ForegroundColor Yellow
+Stop-Port -Port 5174
+
 # Also kill any node processes that might be running (optional - be careful with this)
 Write-Host "`nChecking for other Node.js processes..." -ForegroundColor Yellow
 $nodeProcesses = Get-Process -Name "node" -ErrorAction SilentlyContinue
