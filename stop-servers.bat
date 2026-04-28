@@ -1,35 +1,34 @@
 @echo off
-REM Stop SigningPortal Servers
-REM This batch file stops all running servers (backend and frontend)
+setlocal EnableDelayedExpansion
+REM Stop SigningPortal dev servers (Express API + Vite).
+REM Double-click to run, or: stop-servers.bat nopause  (no "Press any key" — for scripts)
 
 echo Stopping SigningPortal servers...
 echo.
 
-REM Stop backend server (port 5000)
-echo Checking backend server (port 5000)...
-for /f "tokens=5" %%a in ('netstat -ano ^| findstr :5000 ^| findstr LISTENING') do (
-    echo Stopping process on port 5000 (PID: %%a)
-    taskkill /F /PID %%a >nul 2>&1
+call :KillListeningPort 5000 "Backend API"
+call :KillListeningPort 5173 "Frontend (Vite default)"
+call :KillListeningPort 5174 "Frontend (Vite alternate)"
+
+echo Done. Checked ports 5000, 5173, and 5174.
+if /i not "%~1"=="nopause" pause
+exit /b 0
+
+:KillListeningPort
+set "PORT=%~1"
+set "TITLE=%~2"
+echo Checking !TITLE! (port !PORT!)...
+set "FOUND=0"
+for /f "tokens=5" %%P in ('netstat -ano 2^>nul ^| findstr ":!PORT! " ^| findstr LISTENING') do (
+    set "FOUND=1"
+    echo   Stopping PID %%P on port !PORT!...
+    taskkill /F /PID %%P >nul 2>&1
     if errorlevel 1 (
-        echo Process %%a not found or already stopped
+        echo   [warn] Could not stop PID %%P
     ) else (
-        echo Process %%a stopped successfully
+        echo   [ok] Stopped PID %%P
     )
 )
+if "!FOUND!"=="0" echo   [ok] Port !PORT! is already free
 echo.
-
-REM Stop frontend server (port 5173)
-echo Checking frontend server (port 5173)...
-for /f "tokens=5" %%a in ('netstat -ano ^| findstr :5173 ^| findstr LISTENING') do (
-    echo Stopping process on port 5173 (PID: %%a)
-    taskkill /F /PID %%a >nul 2>&1
-    if errorlevel 1 (
-        echo Process %%a not found or already stopped
-    ) else (
-        echo Process %%a stopped successfully
-    )
-)
-echo.
-
-echo All servers stopped!
-pause
+exit /b 0
