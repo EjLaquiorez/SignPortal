@@ -2,9 +2,9 @@
 
 A small **web application** for uploading documents, capturing electronic signatures, and moving each file through an **approval workflow**: Personnel → Authority → completed.
 
-This README is written for **beginners** and **first-time contributors**. If you already know Node.js and full-stack apps, skip to [Run the project locally](#run-the-project-locally).
+This README is written for **beginners** and **first-time contributors**. If you already know Node.js and full-stack apps, skip to [Run the project locally](#run-the-project-locally). For a **step-by-step picture** of frontend, API, and database (glossary and “follow one click”), see [BEGINNERS_GUIDE.md](BEGINNERS_GUIDE.md).
 
-*Last updated: 26 April 2026.*
+*Last updated: 28 April 2026.*
 
 ---
 
@@ -138,8 +138,9 @@ npm run test
 | Topic | Where |
 |--------|--------|
 | **Where each part of the code lives** | [CODEBASE.md](CODEBASE.md) |
+| **New to the codebase / full-stack basics** | [BEGINNERS_GUIDE.md](BEGINNERS_GUIDE.md) |
+| Manual UI checks (screens and flows) | [INTERFACE_FUNCTIONALITY_CHECKLIST.md](INTERFACE_FUNCTIONALITY_CHECKLIST.md) |
 | Sample files and seeding | [samples/README.md](samples/README.md) |
-| Feature checklist and ideas | [INTERFACE_FUNCTIONALITY_CHECKLIST.md](INTERFACE_FUNCTIONALITY_CHECKLIST.md) |
 | API, access control, test users | [backend/docs/](backend/docs/) |
 
 ---
