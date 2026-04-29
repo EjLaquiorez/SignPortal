@@ -11,6 +11,7 @@ You do **not** need to know React, Express, or databases before you start. When 
 | Install Node, run servers, full troubleshooting | [README.md](README.md) |
 | A map of folders and files | [CODEBASE.md](CODEBASE.md) |
 | A checkbox list to verify each screen in the UI | [INTERFACE_FUNCTIONALITY_CHECKLIST.md](INTERFACE_FUNCTIONALITY_CHECKLIST.md) |
+| Who can see or change what (roles, classified docs) | [backend/docs/ACCESS_CONTROL.md](backend/docs/ACCESS_CONTROL.md) |
 
 ---
 
@@ -178,7 +179,7 @@ You are watching the **frontend ask the backend for data**—that is the core id
 
 ### Stop the servers
 
-From the project root, see [README.md](README.md) (e.g. `npm run stop` on Windows).
+From the **project root** (folder with `backend/` and `frontend/`), on **Windows** you can run **`npm run stop`** to free common dev ports (see [README.md](README.md) and [CODEBASE.md](CODEBASE.md)). Or stop each terminal with Ctrl+C.
 
 ---
 
@@ -236,7 +237,7 @@ The database **structure** (tables and columns) lives in **`backend/src/config/s
 | Table | Meaning in plain language |
 |-------|---------------------------|
 | **users** | People who can sign in. Each has a **role** (e.g. personnel, authority, admin). |
-| **documents** | One uploaded file and its metadata (title, status, deadline, …). File bytes may be stored in a **BLOB** (binary inside the database). |
+| **documents** | One uploaded file and its metadata (title, status, deadline, classification, priority, …). File bytes may be stored in a **BLOB** (binary inside the database). |
 | **workflow_stages** | Steps a document goes through (who signs or approves next). |
 | **signatures** | A saved signature for a stage (drawn or image). |
 | **document_attachments** | Extra files linked to a document. |
@@ -269,20 +270,35 @@ If the token is invalid or expired, the API may return **401 Unauthorized**; the
 | Path prefix | What it’s for |
 |-------------|---------------|
 | `/auth` | Register, login, “who am I”. |
-| `/documents` | Upload, list, download; versioning often under the same area. |
+| `/documents` | Upload, list, download; **signed file versions** are also mounted here (same router family as documents—see `documentVersions.js` in [CODEBASE.md](CODEBASE.md)). |
 | `/workflow` | Stages, approvals, moving the workflow forward. |
 | `/signatures` | Save and load signatures. |
 | `/notifications` | List notifications, mark read/unread. |
 
 Attachments often live under paths like **`/documents/:id/attachments`**—see `backend/src/routes/attachments.js`.
 
+### Optional: fill the app with sample users or documents
+
+After `init-db`, you can add demo data from **`backend/`**:
+
+```bash
+npm run seed-users
+npm run seed-documents
+```
+
+Details: [backend/docs/SAMPLE_USERS.md](backend/docs/SAMPLE_USERS.md), [samples/](samples/).
+
 ### Important files (starter list)
 
 | File | Why it matters |
 |------|----------------|
 | `backend/src/server.js` | Backend starts here; routes are wired up. |
-| `frontend/src/main.jsx` → `App.jsx` | Frontend starts here. |
+| `frontend/src/main.jsx` → `App.jsx` | Frontend starts here; `App.jsx` is the route table (which URL shows which page). |
 | `frontend/src/services/api.js` | Central place for HTTP calls to the API. |
+| `frontend/src/context/AuthContext.jsx` | Login state, user, token (often `localStorage`). |
+| `frontend/src/components/ProtectedRoute.jsx` | Wraps pages that require login (and optional admin role). |
+| `backend/src/middleware/auth.js` | Validates JWT on protected API routes. |
+| `backend/src/middleware/roles.js` | Role checks (e.g. admin-only actions). |
 | `backend/src/config/database.js` | Connects to SQLite. |
 | `backend/src/config/schema.sql` | Table definitions. |
 
@@ -354,4 +370,4 @@ No. **SQLite** is a library; data is usually in a file like `signingportal.db` u
 
 ---
 
-*Last updated: 28 April 2026.*
+*Last updated: 29 April 2026.*
