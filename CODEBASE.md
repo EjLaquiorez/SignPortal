@@ -10,7 +10,8 @@ Companion to [README.md](README.md). This document describes **what** each area 
 |------|---------|
 | [README.md](README.md) | How to run and use the project |
 | [CODEBASE.md](CODEBASE.md) | This file — layout of the code |
-| [INTERFACE_FUNCTIONALITY_CHECKLIST.md](INTERFACE_FUNCTIONALITY_CHECKLIST.md) | Feature checklist and improvement ideas |
+| [BEGINNERS_GUIDE.md](BEGINNERS_GUIDE.md) | Onboarding: first run, glossary, how frontend and backend connect |
+| [INTERFACE_FUNCTIONALITY_CHECKLIST.md](INTERFACE_FUNCTIONALITY_CHECKLIST.md) | Manual checklist for main UI screens and flows |
 | [package.json](package.json) | Root npm scripts (e.g. `npm run stop` for dev servers) |
 | [stop-servers.ps1](stop-servers.ps1) / [stop-servers.bat](stop-servers.bat) | Stop processes bound to dev ports (Windows) |
 | `backend/` | Express API, SQLite, file uploads |
